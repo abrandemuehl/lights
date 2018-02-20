@@ -10,26 +10,29 @@
   #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
 #endif /* __GNUC__ */
 
-static void USART_Config(void);
+/* static void USART_Config(void); */
 
 int main() {
 
+  /*
   USART_Config();
 
-  printf("\n\rUSART Printf Example: retarget the C library printf function to the USART\n\r");
+  while(1) {
+    printf("\n\rUSART Printf Example: retarget the C library printf function to the USART\n\r");
 
-  /* Loop until the end of transmission */
-  /* The software must wait until TC=1. The TC flag remains cleared during all data
-     transfers and it is set by hardware at the last frame's end of transmission*/
-  while (USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET)
-  {}
+    // Loop until the end of transmission
+    // The software must wait until TC=1. The TC flag remains cleared during all data
+    // transfers and it is set by hardware at the last frame's end of transmission
+    while (USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET)
+    {}
+
+  }
 
   while(1);
-
-  /*
+  */
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
   GPIO_InitTypeDef GPIO_InitStructure;
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -37,33 +40,28 @@ int main() {
   GPIO_Init(GPIOA, &GPIO_InitStructure);
 
   while(1) {
-
     // Set PA4
-    GPIOA->BSRR = 0x000F << 2;
+    GPIOA->BSRR = 0x0010;
+    for(int32_t i=0; i < 2000; i++) {}
     // Reset PA4
-    GPIOA->BRR = 0x000F << 2;
+    GPIOA->BRR = 0x0010;
+    for(int32_t i=0; i < 2000; i++) {}
   }
   return 0;
-  */
 }
 
-/**
-  * @brief Configure the USART Device
-  * @param  None
-  * @retval None
-  */
+/*
 static void USART_Config(void)
 { 
   USART_InitTypeDef USART_InitStructure;
   
-  /* USARTx configured as follow:
-  - BaudRate = 115200 baud  
-  - Word Length = 8 Bits
-  - Stop Bit = 1 Stop Bit
-  - Parity = No Parity
-  - Hardware flow control disabled (RTS and CTS signals)
-  - Receive and transmit enabled
-  */
+  // USARTx configured as follow:
+  // - BaudRate = 115200 baud  
+  // - Word Length = 8 Bits
+  // - Stop Bit = 1 Stop Bit
+  // - Parity = No Parity
+  // - Hardware flow control disabled (RTS and CTS signals)
+  // - Receive and transmit enabled
   USART_InitStructure.USART_BaudRate = 115200;
   USART_InitStructure.USART_WordLength = USART_WordLength_8b;
   USART_InitStructure.USART_StopBits = USART_StopBits_1;
@@ -73,19 +71,19 @@ static void USART_Config(void)
   
   GPIO_InitTypeDef GPIO_InitStructure;
 
-  /* Enable GPIO clock */
+  // Enable GPIO clock
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
 
-  /* Enable USART clock */
+  // Enable USART clock
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);  
 
-  /* Connect PXx to USARTx_Tx */
+  // Connect PXx to USARTx_Tx
   GPIO_PinAFConfig(GPIOA, GPIO_Pin_9, GPIO_AF_1);
 
-  /* Connect PXx to USARTx_Rx */
+  // Connect PXx to USARTx_Rx
   GPIO_PinAFConfig(GPIOA, GPIO_Pin_10, GPIO_AF_1);
   
-  /* Configure USART Tx as alternate function push-pull */
+  // Configure USART Tx as alternate function push-pull
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
@@ -93,32 +91,25 @@ static void USART_Config(void)
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
     
-  /* Configure USART Rx as alternate function push-pull */
+  // Configure USART Rx as alternate function push-pull
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
 
-  /* USART configuration */
   USART_Init(USART1, &USART_InitStructure);
     
-  /* Enable USART */
+  // Enable USART
   USART_Cmd(USART1, ENABLE);
 }
 
 
-/**
-  * @brief  Retargets the C library printf function to the USART.
-  * @param  None
-  * @retval None
-  */
 PUTCHAR_PROTOTYPE
 {
-  /* Place your implementation of fputc here */
-  /* e.g. write a character to the USART */
   USART_SendData(USART1, (uint8_t) ch);
 
-  /* Loop until transmit data register is empty */
+  // Loop until transmit data register is empty
   while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET)
   {}
 
   return ch;
 }
+*/

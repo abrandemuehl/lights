@@ -10,17 +10,17 @@ OBJCOPY=arm-none-eabi-objcopy
 
 
 LIBS=lib/system_stm32f0xx.o lib/stm32f0xx_rcc.o lib/stm32f0xx_gpio.o lib/stm32f0xx_usart.o
-OBJS=src/main.o src/startup.o
+OBJS=src/main.o src/startup_stm32f0xx.o
 OBJS += $(LIBS)
 LDSCRIPT=src/stm32f0.ld
 DEFINES=-DSTM32F030xC -DARM_MATH_CM0 -DUSE_STDPERIPH_DRIVER
 
 # Add HSE frequency
-DEFINES+='-DHSE_VALUE=((uint32_t)24000000)'
+DEFINES += -DHSE_VALUE='((uint32_t)24000000)'
 
 INCLUDE=include
 
-CFLAGS=-std=c11 -O2 -Wall -Werror -mlittle-endian -mcpu=cortex-m0 -mthumb -fsingle-precision-constant
+CFLAGS=-std=c11 -Wall -Werror -mlittle-endian -mcpu=cortex-m0 -mthumb -fsingle-precision-constant
 CFLAGS += -mfloat-abi=soft
 CFLAGS += $(DEFINES) -I$(INCLUDE)
 
@@ -59,9 +59,9 @@ stm32flash: stm32flash/*
 	$(MAKE) -C $@
 
 flash: $(BINARY) stm32flash
-	./stm32flash/stm32flash -v -i -rts,dtr,-dtr,rts -R -w $< $(PORT)
+	./stm32flash/stm32flash -v -i rts,dtr,-dtr,-rts -R -w $< $(PORT)
 
 clean:
-	rm -f $(CMSIS_DeviceSystem) $(OBJS) $(BINARY) *.o *.bin *.hex *.elf src/*.o
+	rm -f $(OBJS) $(BINARY) *.o *.bin *.hex *.elf src/*.o
 
 .PHONY: clean
