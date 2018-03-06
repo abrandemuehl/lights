@@ -1537,24 +1537,34 @@ design rules under a new name.</description>
 <wire x1="12.8016" y1="60.8584" x2="9.144" y2="64.516" width="0.2032" layer="16"/>
 </signal>
 <signal name="USART1_TX">
-<contactref element="U101" pad="12"/>
 <contactref element="IC201" pad="2"/>
-<wire x1="22.30445" y1="47.441059375" x2="16.973340625" y2="47.441059375" width="0.2032" layer="1"/>
 <wire x1="16.973340625" y1="47.441059375" x2="14.7828" y2="49.6316" width="0.2032" layer="1"/>
 <wire x1="14.7828" y1="49.6316" x2="14.7828" y2="50.546" width="0.2032" layer="1"/>
 <wire x1="13.4874" y1="51.8414" x2="12.9794" y2="51.8414" width="0.2032" layer="1"/>
 <wire x1="12.9794" y1="51.8414" x2="12.172" y2="51.034" width="0.2032" layer="1"/>
 <wire x1="12.172" y1="51.034" x2="12.172" y2="50.306" width="0.2032" layer="1"/>
 <wire x1="14.7828" y1="50.546" x2="13.4874" y2="51.8414" width="0.2032" layer="1"/>
+<contactref element="U101" pad="30"/>
+<wire x1="30.082625" y1="43.19841875" x2="28.01824375" y2="45.2628" width="0.1524" layer="1"/>
+<wire x1="28.01824375" y1="45.2628" x2="27.94" y2="45.2628" width="0.1524" layer="1"/>
+<via x="27.94" y="45.2628" extent="1-16" drill="0.35"/>
+<wire x1="27.94" y1="45.2628" x2="19.1516" y2="45.2628" width="0.1524" layer="16"/>
+<wire x1="19.1516" y1="45.2628" x2="16.973340625" y2="47.441059375" width="0.1524" layer="16"/>
+<via x="16.973340625" y="47.441059375" extent="1-16" drill="0.35"/>
 </signal>
 <signal name="USART1_RX">
-<contactref element="U101" pad="13"/>
 <contactref element="IC201" pad="30"/>
 <wire x1="13.234" y1="48.768" x2="13.222" y2="48.756" width="0.2032" layer="1"/>
-<wire x1="22.30445" y1="45.3197375" x2="17.6214625" y2="45.3197375" width="0.2032" layer="1"/>
 <wire x1="17.6214625" y1="45.3197375" x2="14.1986" y2="48.7426" width="0.2032" layer="1"/>
 <wire x1="14.1986" y1="48.7426" x2="13.2594" y2="48.7426" width="0.2032" layer="1"/>
 <wire x1="13.2594" y1="48.7426" x2="13.234" y2="48.768" width="0.2032" layer="1"/>
+<contactref element="U101" pad="31"/>
+<wire x1="30.436178125" y1="43.551971875" x2="29.7434" y2="44.24475" width="0.1524" layer="1"/>
+<wire x1="29.7434" y1="44.24475" x2="29.7434" y2="44.6024" width="0.1524" layer="1"/>
+<via x="29.7434" y="44.6024" extent="1-16" drill="0.35"/>
+<wire x1="29.7434" y1="44.6024" x2="18.3388" y2="44.6024" width="0.1524" layer="16"/>
+<wire x1="18.3388" y1="44.6024" x2="17.6214625" y2="45.3197375" width="0.1524" layer="16"/>
+<via x="17.6214625" y="45.3197375" extent="1-16" drill="0.35"/>
 </signal>
 <signal name="USART6_TX">
 <contactref element="U101" pad="14"/>
@@ -1714,12 +1724,6 @@ design rules under a new name.</description>
 </signal>
 <signal name="PA11">
 <contactref element="U101" pad="32"/>
-</signal>
-<signal name="PA10">
-<contactref element="U101" pad="31"/>
-</signal>
-<signal name="PA9">
-<contactref element="U101" pad="30"/>
 </signal>
 <signal name="PB15">
 <contactref element="U101" pad="28"/>
@@ -1962,6 +1966,12 @@ design rules under a new name.</description>
 <contactref element="CON4" pad="A"/>
 <wire x1="11.684" y1="3.6966" x2="13.6922" y2="3.6966" width="0.2032" layer="1"/>
 <wire x1="13.6922" y1="3.6966" x2="13.716" y2="3.7204" width="0.2032" layer="1"/>
+</signal>
+<signal name="PA2">
+<contactref element="U101" pad="12"/>
+</signal>
+<signal name="PA3">
+<contactref element="U101" pad="13"/>
 </signal>
 </signals>
 </board>

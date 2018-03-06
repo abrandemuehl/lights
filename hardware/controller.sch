@@ -2269,16 +2269,16 @@ Mating wall wart : TOL-00298 (and others)</description>
 </net>
 <net name="USART1_TX" class="0">
 <segment>
-<pinref part="U101" gate="G$1" pin="PA2"/>
-<wire x1="109.22" y1="119.38" x2="101.6" y2="119.38" width="0.1524" layer="91"/>
-<label x="101.6" y="119.38" size="1.27" layer="95" rot="R180" xref="yes"/>
+<pinref part="U101" gate="G$1" pin="PA9"/>
+<wire x1="162.56" y1="134.62" x2="154.94" y2="134.62" width="0.1524" layer="91"/>
+<label x="162.56" y="134.62" size="1.27" layer="95" xref="yes"/>
 </segment>
 </net>
 <net name="USART1_RX" class="0">
 <segment>
-<pinref part="U101" gate="G$1" pin="PA3"/>
-<wire x1="109.22" y1="116.84" x2="101.6" y2="116.84" width="0.1524" layer="91"/>
-<label x="101.6" y="116.84" size="1.27" layer="95" rot="R180" xref="yes"/>
+<pinref part="U101" gate="G$1" pin="PA10"/>
+<wire x1="154.94" y1="132.08" x2="162.56" y2="132.08" width="0.1524" layer="91"/>
+<label x="162.56" y="132.08" size="1.27" layer="95" xref="yes"/>
 </segment>
 </net>
 <net name="USART6_TX" class="0">
@@ -2438,20 +2438,6 @@ Mating wall wart : TOL-00298 (and others)</description>
 <label x="162.56" y="129.54" size="1.27" layer="95" xref="yes"/>
 </segment>
 </net>
-<net name="PA10" class="0">
-<segment>
-<pinref part="U101" gate="G$1" pin="PA10"/>
-<wire x1="154.94" y1="132.08" x2="162.56" y2="132.08" width="0.1524" layer="91"/>
-<label x="162.56" y="132.08" size="1.27" layer="95" xref="yes"/>
-</segment>
-</net>
-<net name="PA9" class="0">
-<segment>
-<pinref part="U101" gate="G$1" pin="PA9"/>
-<wire x1="162.56" y1="134.62" x2="154.94" y2="134.62" width="0.1524" layer="91"/>
-<label x="162.56" y="134.62" size="1.27" layer="95" xref="yes"/>
-</segment>
-</net>
 <net name="SWITCH" class="0">
 <segment>
 <pinref part="U101" gate="G$1" pin="PA8"/>
@@ -2601,6 +2587,20 @@ Mating wall wart : TOL-00298 (and others)</description>
 <pinref part="R101" gate="G$1" pin="2"/>
 <wire x1="33.02" y1="48.26" x2="33.02" y2="53.34" width="0.1524" layer="91"/>
 <label x="33.02" y="53.34" size="1.27" layer="95" rot="R90" xref="yes"/>
+</segment>
+</net>
+<net name="PA2" class="0">
+<segment>
+<pinref part="U101" gate="G$1" pin="PA2"/>
+<wire x1="109.22" y1="119.38" x2="101.6" y2="119.38" width="0.1524" layer="91"/>
+<label x="101.6" y="119.38" size="1.27" layer="95" rot="R180" xref="yes"/>
+</segment>
+</net>
+<net name="PA3" class="0">
+<segment>
+<pinref part="U101" gate="G$1" pin="PA3"/>
+<wire x1="109.22" y1="116.84" x2="101.6" y2="116.84" width="0.1524" layer="91"/>
+<label x="101.6" y="116.84" size="1.27" layer="95" rot="R180" xref="yes"/>
 </segment>
 </net>
 </nets>
