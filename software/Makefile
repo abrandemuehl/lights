@@ -9,7 +9,7 @@ AS=arm-none-eabi-as
 OBJCOPY=arm-none-eabi-objcopy
 
 
-LIBS=lib/system_stm32f0xx.o lib/stm32f0xx_rcc.o lib/stm32f0xx_gpio.o lib/stm32f0xx_usart.o
+LIBS=lib/system_stm32f0xx.o lib/stm32f0xx_rcc.o lib/stm32f0xx_gpio.o lib/stm32f0xx_usart.o lib/stm32f0xx_tim.o
 OBJS=src/main.o src/startup_stm32f0xx.o
 OBJS += $(LIBS)
 LDSCRIPT=src/stm32f0.ld
