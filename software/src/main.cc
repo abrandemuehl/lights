@@ -1,6 +1,7 @@
-#include <stdint.h>
 #include "stm32f0xx.h"
-#include <stdio.h>
+#include <cstdint>
+#include <cstdio>
+#include "usart.h"
 
 #ifdef __GNUC__
   /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
@@ -10,15 +11,25 @@
   #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
 #endif /* __GNUC__ */
 
-/* static void USART_Config(void); */
-
 extern uint32_t SystemCoreClock;
+
+using namespace stm32;
 
 int main() {
 
-  /*
-  USART_Config();
+  auto usart1 = Usart(USART::Usart1);
+  auto usart3 = Usart(USART::Usart3);
+  auto usart4 = Usart(USART::Usart4);
+  auto usart5 = Usart(USART::Usart5);
+  auto usart6 = Usart(USART::Usart6);
 
+  usart1.Start(115200);
+  usart3.Start(115200);
+  usart4.Start(115200);
+  usart5.Start(115200);
+  usart6.Start(115200);
+
+  /*
   while(1) {
     printf("\n\rUSART Printf Example: retarget the C library printf function to the USART\n\r");
 
@@ -46,12 +57,12 @@ int main() {
 
   GPIO_PinAFConfig(GPIOA, GPIO_PinSource8, GPIO_AF_2);
 
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1 , ENABLE);
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
 
   uint16_t freq = 1000;
   uint16_t period = (SystemCoreClock / freq ) - 1;
   /* Time Base configuration */
-  TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
+  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
   TIM_TimeBaseStructure.TIM_Prescaler = 0;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
   TIM_TimeBaseStructure.TIM_Period = period;
@@ -81,58 +92,9 @@ int main() {
   return 0;
 }
 
+
+
 /*
-static void USART_Config(void)
-{ 
-  USART_InitTypeDef USART_InitStructure;
-  
-  // USARTx configured as follow:
-  // - BaudRate = 115200 baud  
-  // - Word Length = 8 Bits
-  // - Stop Bit = 1 Stop Bit
-  // - Parity = No Parity
-  // - Hardware flow control disabled (RTS and CTS signals)
-  // - Receive and transmit enabled
-  USART_InitStructure.USART_BaudRate = 115200;
-  USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-  USART_InitStructure.USART_StopBits = USART_StopBits_1;
-  USART_InitStructure.USART_Parity = USART_Parity_No;
-  USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-  USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-  
-  GPIO_InitTypeDef GPIO_InitStructure;
-
-  // Enable GPIO clock
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
-
-  // Enable USART clock
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);  
-
-  // Connect PXx to USARTx_Tx
-  GPIO_PinAFConfig(GPIOA, GPIO_Pin_9, GPIO_AF_1);
-
-  // Connect PXx to USARTx_Rx
-  GPIO_PinAFConfig(GPIOA, GPIO_Pin_10, GPIO_AF_1);
-  
-  // Configure USART Tx as alternate function push-pull
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-    
-  // Configure USART Rx as alternate function push-pull
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-  USART_Init(USART1, &USART_InitStructure);
-    
-  // Enable USART
-  USART_Cmd(USART1, ENABLE);
-}
-
-
 PUTCHAR_PROTOTYPE
 {
   USART_SendData(USART1, (uint8_t) ch);
