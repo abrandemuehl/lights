@@ -10,7 +10,7 @@ OBJCOPY=arm-none-eabi-objcopy
 
 
 LIBS=lib/system_stm32f0xx.o lib/stm32f0xx_rcc.o lib/stm32f0xx_gpio.o lib/stm32f0xx_usart.o lib/stm32f0xx_tim.o
-OBJS=src/main.o src/startup_stm32f0xx.o
+OBJS=src/main.o src/startup_stm32f0xx.o src/usart.o
 OBJS += $(LIBS)
 LDSCRIPT=src/stm32f0.ld
 DEFINES=-DSTM32F030xC -DARM_MATH_CM0 -DUSE_STDPERIPH_DRIVER
@@ -20,9 +20,9 @@ DEFINES += -DHSE_VALUE='((uint32_t)24000000)'
 
 INCLUDE=include
 
-CFLAGS=-std=c11 -Wall -Werror -mlittle-endian -mcpu=cortex-m0 -mthumb -fsingle-precision-constant
-CFLAGS += -mfloat-abi=soft
-CFLAGS += $(DEFINES) -I$(INCLUDE)
+CXXFLAGS=-std=c++14 -Wall -Werror -mlittle-endian -mcpu=cortex-m0 -mthumb -fsingle-precision-constant
+CXXFLAGS += -mfloat-abi=soft
+CXXFLAGS += $(DEFINES) -I$(INCLUDE)
 
 
 LDFLAGS=-mthumb -T$(LDSCRIPT)
@@ -38,7 +38,7 @@ all: $(OBJS) $(BINARY)
 
 
 %elf: $(OBJS) $(LDSCRIPT)
-	$(CC) $(CFLAGS) $(OBJS) $(LDFLAGS) -o $@
+	$(CC) $(CXXFLAGS) $(OBJS) $(LDFLAGS) -o $@
 
 %bin: %elf
 	$(OBJCOPY) -O binary -S $< $@
@@ -50,7 +50,7 @@ all: $(OBJS) $(BINARY)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CXXFLAGS) -c $< -o $@
 
 %.o: %.s
 	$(AS) $(ASFLAGS) -c $< -o $@
