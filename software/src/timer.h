@@ -11,13 +11,12 @@ class Timer {
     Chan3 = 3,
     Chan4 = 4,
   };
-  enum class Timer {
+  enum class TIMER {
     Tim1 = 0,
   };
   Timer(uint8_t timer, uint16_t period_us);
   void EnableOutputChannel(uint8_t channel);
 
-  void SetOutputDuty(uint16_t )
   void SetPeriod(uint16_t us);
   void SetDuty(float duty);
   void SetPulseWidth(uint16_t us);

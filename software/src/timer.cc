@@ -3,18 +3,17 @@
 namespace stm32 {
 
 constexpr TIM_TypeDef *kTIMBase[] = {TIM1};
-constexpr GPIO_TypeDef *kChanGPIOBase[] = {
+constexpr GPIO_TypeDef *kChanGPIOBase[][] = {
     {GPIOA, GPIOA, GPIOA, GPIOA},  // Tim1
 };
 
-constexpr GPIO_TypeDef *kChanGPIOPin[] = {
+constexpr GPIO_TypeDef *kChanGPIOPin[][4] = {
   {GPIO_Pin_8, GPIO_Pin_9, GPIO_Pin_10, GPIO_Pin_11},
 };
 
-constexpr uint32_t kChanGPIOAF[] = {
+constexpr uint32_t kChanGPIOAF[][4] = {
   {GPIO_AF_2, GPIO_AF_2, GPIO_AF_2, GPIO_AF_2},
-}
-
+};
 static uint32_t GPIOToRCC(GPIO_TypeDef *gpio) {
   switch((long)gpio) {
     case (long)GPIOA:
@@ -22,6 +21,8 @@ static uint32_t GPIOToRCC(GPIO_TypeDef *gpio) {
     case (long)GPIOB:
       return RCC_AHBPeriph_GPIOB;
   }
+  // TODO: Throw error
+  return -1;
 }
 
 Timer::Timer(uint8_t timer, uint16_t period_us)
@@ -40,7 +41,7 @@ Timer::Timer(uint8_t timer, uint16_t period_us)
   TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
 }
 
-void Timer::EnableOutputChannel(enum class Channel channel) {
+void Timer::EnableOutputChannel(uint8_t channel) {
   // Enable GPIO Bank for output pin
   RCC_AHBPeriphClockCmd(GPIOToRCC(kChanGPIOBase[timer_][channel]), ENABLE);
 
