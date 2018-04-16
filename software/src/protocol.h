@@ -12,6 +12,8 @@
 // 5. Receive pattern from neighbor, if one has been uploaded
 // 6. Poll every uart to check for messages
 
+constexpr int kMaxMessageSize = 100;
+
 enum MessageType {
   GetLocation = 0,
   SendLocation = 1,
@@ -22,8 +24,6 @@ enum ControlChar {
   DLE = 0x10,
   SOH = 0x01,
   ETX = 0x02,
-  ACK = 0x03,
-  NACK = 0x04,
 };
 
 // Basic message
@@ -60,36 +60,36 @@ struct MessageTrailer {
 
 class Comm;
 
-
-
 class Neighbor {
  public:
-  Neighbor(stm32::USART usart);
+  Neighbor(stm32::Usart *usart);
   Neighbor() {}
 
-  // Note: Disables the USART on the pin. Should only be called at startup before communication begins
+  // Note: Disables the Usart on the pin. Should only be called at startup before communication begins
   bool Online();
 
   std::tuple<int8_t, int8_t> GetLocation();
   bool GetPattern(SendPatternMessage &message);
   bool SendLocation(SendLocationMessage message);
 
+  bool ProcessBuffer();
+
 
  private:
+  bool isControlChar(uint8_t data);
   void HandleMessage();
-  bool SendMessage();
+  template <typename T>
+  void SendMessage(T &message);
   bool online_;
-  stm32::USART dir_;
-  stm32::Usart usart_;
+  stm32::Usart *usart_;
   friend class Comm;
 };
 
 class Comm {
  public:
-  Comm(stm32::USART n, stm32::USART w, stm32::USART s, stm32::USART e);
+  Comm(stm32::Usart *n, stm32::Usart *w, stm32::Usart *s, stm32::Usart *e);
 
  private:
-  std::tuple<int, int> GetLocationFromNeighbor(stm32::Usart neighbor);
   Neighbor n_;
   Neighbor w_;
   Neighbor s_;
@@ -99,3 +99,44 @@ class Comm {
 
   friend class Neighbor;
 };
+
+template <typename T>
+void Neighbor::SendMessage(T &message) {
+  uint8_t buf[kMaxMessageSize];
+  uint8_t *ptr = buf;
+
+  // Insert header
+  MessageHeader *header = reinterpret_cast<MessageHeader *>(ptr);
+  header->soh = SOH;
+  header->type = T::Type;
+  ptr += sizeof(*header);
+
+  // Insert real message
+  T *msg = reinterpret_cast<T *>(ptr);
+  msg = *message;
+  ptr += sizeof(*message);
+
+  // Insert trailer
+  MessageTrailer *trailer = reinterpret_cast<MessageTrailer *>(ptr);
+  trailer->etx = ETX;
+
+  int size = sizeof(*header) + sizeof(*message) + sizeof(*trailer);
+
+  // Handle delimiting
+  uint8_t data[kMaxMessageSize];
+  data[0] = SOH;
+  int idx = 1;
+  for (int i = 1; i < size - 1; i++) {
+    if (isControlChar(buf[i])) {
+      // Insert a DLE and mask the byte
+      data[idx++] = DLE;
+      data[idx++] = buf[i] | 0x80;
+    } else {
+      data[idx++] = buf[i];
+    }
+  }
+  data[idx++] = ETX;
+
+  // Send delimited data
+  usart_->Write(data, idx);
+}

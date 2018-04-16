@@ -185,8 +185,7 @@ g_pfnVectors:
   .word SPI2_IRQHandler
   .word USART1_IRQHandler
   .word USART2_IRQHandler
-  .word 0
-  .word CEC_IRQHandler
+  .word USART3_6_IRQHandler
   .word 0
   .word BootRAM          /* @0x108. This is for boot in RAM mode for 
                             STM32F0xx devices. */
@@ -298,8 +297,9 @@ g_pfnVectors:
   .weak USART2_IRQHandler
   .thumb_set USART2_IRQHandler,Default_Handler
   
-  .weak CEC_IRQHandler
-  .thumb_set CEC_IRQHandler,Default_Handler
+  .weak USART3_6_IRQHandler
+  .thumb_set USART3_6_IRQHandler,Default_Handler
+
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

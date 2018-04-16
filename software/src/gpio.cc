@@ -10,7 +10,7 @@ gpio::~gpio() {
   GPIO_Init(bank_, &GPIO_InitStructure);
 }
 
-void gpio::Init(GPIOMode_TypeDef mode, GPIOPuPd_TypeDef pull) {
+void gpio::Start(GPIOMode_TypeDef mode, GPIOPuPd_TypeDef pull) {
   mode_ = mode;
   // Enable clocks
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA | RCC_AHBPeriph_GPIOB, ENABLE);

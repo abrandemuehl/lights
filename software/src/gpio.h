@@ -9,7 +9,7 @@ class gpio {
   gpio(GPIO_TypeDef *bank, uint16_t pin);
   ~gpio();
 
-  void Init(GPIOMode_TypeDef mode, GPIOPuPd_TypeDef pull);
+  void Start(GPIOMode_TypeDef mode, GPIOPuPd_TypeDef pull);
 
   bool Read();
   void Write(bool val);
