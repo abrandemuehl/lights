@@ -1,0 +1,12 @@
+diff --git a/src/ftdi.c b/src/ftdi.c
+index 52266d0..2227619 100644
+--- a/src/ftdi.c
++++ b/src/ftdi.c
+@@ -66,6 +66,7 @@ static void ftdi_usb_close_internal (struct ftdi_context *ftdi)
+ {
+     if (ftdi && ftdi->usb_dev)
+     {
++        libusb_attach_kernel_driver (ftdi->usb_dev, 0);
+         libusb_close (ftdi->usb_dev);
+         ftdi->usb_dev = NULL;
+         if(ftdi->eeprom)
