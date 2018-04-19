@@ -1,4 +1,5 @@
 #include "usart.h"
+#include "ringbuffer.h"
 
 namespace stm32 {
 
@@ -17,10 +18,7 @@ Usart Usart6(6, USART6, GPIOA, RCC_AHBPeriph_GPIOA, RCC_APB2Periph_USART6, GPIO_
 
 constexpr int kBufferSize = 256;
 
-uint8_t rxBuffer[6][kBufferSize];
-
-int rxStart[6] = { 0 };
-int rxEnd[6] = { 0 };
+RingBuffer<uint8_t, kBufferSize> rxBuffer[6];
 
 bool rxReceived[8] = { false };
 
@@ -105,13 +103,7 @@ void USART1_IRQHandler(void)
   if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
   {
     /* Read one byte from the receive data register */
-    rxBuffer[0][rxIndex[0]++] = USART_ReceiveData(USART1);
-
-    if(rxIndex[0] == kBufferSize)
-    {
-      rxReceived[0] = true;
-      rxIndex[0] = 0;
-    }
+    rxReceived[0] = rxBuffer[0].Put(USART_ReceiveData(USART1));
   }
 }
 
@@ -120,13 +112,7 @@ void USART2_IRQHandler(void)
   if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)
   {
     /* Read one byte from the receive data register */
-    rxBuffer[1][rxIndex[1]++] = USART_ReceiveData(USART2);
-
-    if(rxIndex[1] == kBufferSize)
-    {
-      rxReceived[1] = true;
-      rxIndex[1] = 0;
-    }
+    rxReceived[1] = rxBuffer[1].Put(USART_ReceiveData(USART2));
   }
 }
 
@@ -140,51 +126,26 @@ void USART3_6_IRQHandler(void)
   if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)
   {
     /* Read one byte from the receive data register */
-    rxBuffer[2][rxIndex[2]++] = USART_ReceiveData(USART3);
-
-    if(rxIndex[2] == kBufferSize)
-    {
-      rxReceived[2] = true;
-      rxIndex[2] = 0;
-    }
+    rxReceived[2] = rxBuffer[2].Put(USART_ReceiveData(USART3));
   }
   
   if(USART_GetITStatus(USART4, USART_IT_RXNE) != RESET)
   {
     /* Read one byte from the receive data register */
-    rxBuffer[3][rxIndex[3]++] = USART_ReceiveData(USART4);
-
-    if(rxIndex[3] == kBufferSize)
-    {
-      rxReceived[3] = true;
-      rxIndex[3] = 0;
-    }
+    rxReceived[3] = rxBuffer[3].Put(USART_ReceiveData(USART4));
   }
   
   if(USART_GetITStatus(USART5, USART_IT_RXNE) != RESET)
   {
-
     /* Read one byte from the receive data register */
-    rxBuffer[4][rxIndex[4]++] = USART_ReceiveData(USART5);
-
-    if(rxIndex[4] == kBufferSize)
-    {
-      rxReceived[4] = true;
-      rxIndex[4] = 0;
-    }
+    rxReceived[4] = rxBuffer[4].Put(USART_ReceiveData(USART5));
   }
   
   if(USART_GetITStatus(USART6, USART_IT_RXNE) != RESET)
   {
 
     /* Read one byte from the receive data register */
-    rxBuffer[5][rxIndex[5]++] = USART_ReceiveData(USART6);
-
-    if(rxIndex[5] == kBufferSize)
-    {
-      rxReceived[5] = true;
-      rxIndex[5] = 0;
-    }
+    rxReceived[5] = rxBuffer[5].Put(USART_ReceiveData(USART6));
   }
 }
 
