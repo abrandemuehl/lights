@@ -65,7 +65,9 @@ stm32flash: stm32flash/*
 
 flash: $(BINARY) stm32flash
 	# ./stm32flash/stm32flash -v -i rts,dtr,-dtr,-rts -R -w $< $(PORT)
+	./bootload_mode.py bootload
 	./stm32loader.py -p $(PORT) -evw $(BINARY)
+	./bootload_mode.py reset
 
 clean:
 	rm -f $(OBJS) $(BINARY) *.o *.bin *.hex *.elf src/*.o
