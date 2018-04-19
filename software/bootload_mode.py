@@ -51,14 +51,14 @@ if __name__ == "__main__":
                 (ret, ftdi.get_error_string(ftdic)))
         os._exit(1)
 
-    if(sys.argv[1] == "bootload")
+    if(sys.argv[1] == "bootload"):
         setBOOT0(ftdic, 1)
         time.sleep(0.1)
-        reset()
+        reset(ftdic)
     elif(sys.argv[1] == "reset"):
         setBOOT0(ftdic, 0)
         time.sleep(0.1)
-        reset()
+        reset(ftdic)
     else:
         print("Unrecognized command")
 
