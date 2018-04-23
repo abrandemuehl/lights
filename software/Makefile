@@ -10,6 +10,7 @@ OBJCOPY=arm-none-eabi-objcopy
 
 
 LIBS=lib/cmsis/system_stm32f0xx.o lib/cmsis/stm32f0xx_rcc.o lib/cmsis/stm32f0xx_gpio.o lib/cmsis/stm32f0xx_usart.o lib/cmsis/stm32f0xx_tim.o
+# LIBS=lib/cmsis/system_stm32f0xx.o lib/hal/stm32f0xx_hal_usart.o
 OBJS=$(patsubst %.cc,%.o,$(wildcard src/*.cc)) src/startup_stm32f0xx.o
 OBJS += $(LIBS)
 LDSCRIPT=src/stm32f0.ld
@@ -18,7 +19,8 @@ DEFINES=-DSTM32F030xC -DARM_MATH_CM0 -DUSE_STDPERIPH_DRIVER
 # Add HSE frequency
 DEFINES += -DHSE_VALUE='((uint32_t)24000000)'
 
-INCLUDES=-Iinclude/hal -Iinclude/cmsis
+# INCLUDES=-Iinclude/hal -Iinclude/cmsis -Iinclude/stdperiph
+INCLUDES=-Iinclude/stdperiph
 
 CXXFLAGS=-std=c++14 -Wall -mlittle-endian -mcpu=cortex-m0 -mthumb -fsingle-precision-constant
 CXXFLAGS += -mfloat-abi=soft
@@ -66,7 +68,7 @@ stm32flash: stm32flash/*
 flash: $(BINARY) stm32flash
 	# ./stm32flash/stm32flash -v -i rts,dtr,-dtr,-rts -R -w $< $(PORT)
 	./bootload_mode.py bootload
-	./stm32loader.py -p $(PORT) -evw $(BINARY)
+	./stm32loader.py -p $(PORT) -ew $(BINARY)
 	./bootload_mode.py reset
 
 clean:
