@@ -17,6 +17,15 @@ class RingBuffer {
     start_ = indexInc(start_);
   }
 
+  int Read(T *result, int n) {
+    for(int i=0; i < n; i++) {
+      if(!Get(&result[i])) {
+        return i;
+      }
+    }
+    return n;
+  }
+
   bool Put(T data, bool force=true) {
     if (!force) {
       // Check for full

@@ -9,15 +9,7 @@ class Usart {
  public:
   Usart(){};
   Usart(int index, USART_TypeDef *usart, GPIO_TypeDef *gpio, uint32_t rcc,
-        uint32_t gpio_rcc, uint16_t pin_rx, uint16_t pin_tx, uint8_t pin_af)
-      : index_(index),
-        usart_(usart),
-        gpio_(gpio),
-        rcc_(rcc),
-        gpio_rcc_(gpio_rcc),
-        pin_rx_(pin_rx),
-        pin_tx_(pin_tx),
-        pin_af_(pin_af) {}
+        uint32_t gpio_rcc, uint16_t pin_rx, uint16_t pin_tx, uint8_t pin_af);
 
   void Start(uint32_t BaudRate);
 
@@ -40,15 +32,14 @@ class Usart {
   uint16_t pin_rx_;
   uint16_t pin_tx_;
   uint16_t pin_af_;
-  uint8_t buffer_[256];
 };
 
-extern Usart Usart1;
-extern Usart Usart2;
-extern Usart Usart3;
-extern Usart Usart4;
-extern Usart Usart5;
-extern Usart Usart6;
+/* extern Usart Usart1; */
+/* extern Usart Usart2; */
+/* extern Usart Usart3; */
+/* extern Usart Usart4; */
+/* extern Usart Usart5; */
+/* extern Usart Usart6; */
 void USART1_IRQHandler(void);
 void USART2_IRQHandler(void);
 void USART3_6_IRQHandler(void);
