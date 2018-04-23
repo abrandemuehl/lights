@@ -1,10 +1,11 @@
 /* #include "stm32f0xx.h" */
 #include <cstdint>
 #include <cstdio>
-/* #include "usart.h" */
-/* #include "timer.h" */
-#include <stm32f0xx_hal.h>
-#include <Legacy/stm32_hal_legacy.h>
+#include <stm32f0xx.h>
+#include "usart.h"
+#include "timer.h"
+/* #include <stm32f0xx_hal.h> */
+/* #include <Legacy/stm32_hal_legacy.h> */
 
 #ifdef __GNUC__
   /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
@@ -16,60 +17,45 @@
 
 extern uint32_t SystemCoreClock;
 
-/* using namespace stm32; */
+using namespace stm32;
 
-/* static Usart Usart1(1, USART1, GPIOA, RCC_APB2Periph_USART1, RCC_AHBPeriph_GPIOA, GPIO_Pin_10, */
-/*     GPIO_Pin_9, GPIO_AF_1); */
 int main() {
-  HAL_Init();
-  __USART1_CLK_ENABLE();
-  __GPIOA_CLK_ENABLE();
 
-  GPIO_InitTypeDef GPIO_InitStructure;
-  // TX Pin
-  GPIO_InitStructure.Pin = GPIO_PIN_9;
-  GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStructure.Alternate = GPIO_AF1_USART1;
-  GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
-  // RX pin
-  GPIO_InitStructure.Pin = GPIO_PIN_10;
-  GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+  /* Usart Usart1(1, USART1, GPIOA, RCC_APB2Periph_USART1, RCC_AHBPeriph_GPIOA, GPIO_Pin_10, */
+  /*     GPIO_Pin_9, GPIO_AF_1); */
+  /* Usart1Enable(); */
 
-  s_UARTHandle.Instance        = USART1;
-  s_UARTHandle.Init.BaudRate   = 115200;
-  s_UARTHandle.Init.WordLength = UART_WORDLENGTH_8B;
-  s_UARTHandle.Init.StopBits   = UART_STOPBITS_1;
-  s_UARTHandle.Init.Parity     = UART_PARITY_NONE;
-  s_UARTHandle.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
-  s_UARTHandle.Init.Mode       = UART_MODE_TX_RX;
-    
-  if (HAL_UART_Init(&s_UARTHandle) != HAL_OK) {
-    while(1);
-  }
-  for (;;)
-  {
-    uint8_t buffer[4] = {'h', 'i', 0, 0};
-    /* HAL_UART_Receive(&s_UARTHandle, buffer, sizeof(buffer), HAL_MAX_DELAY); */
-    HAL_UART_Transmit(&s_UARTHandle, buffer, sizeof(buffer), HAL_MAX_DELAY);
-  }
   // 1 ms period
   /* Timer1.Start(1000); */
   // PA8
   /* Timer1.EnableOutputChannel(1); */
   // Successful send
-  uint8_t data = 'c';
-  while(1) {
-  }
-  /* Usart1.Write(&data, 1); */
-  /* while(1) { */
-  /*   __WFI(); */
-  /* } */
 
 
+
+
+
+  // Show that I actually got somewhere
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
+
+  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  GPIO_Init(GPIOB, &GPIO_InitStructure);
+
   while(1) {
+    GPIOB->BSRR = 0x0080;
+    for(int i=0; i < 100000; i++);
+    GPIOB->BRR = 0x0080;
+    for(int i=0; i < 100000; i++);
+    /* const char *data = "hi\n"; */
+    /* for(int i=0; i < 4; i++) { */
+    /*   USART_SendData(USART1, (uint16_t)data[i]); */
+    /*   while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {} */
+    /* } */
     /* printf("\n\rUSART Printf Example: retarget the C library printf function to the USART\n\r"); */
 
     // Loop until the end of transmission
