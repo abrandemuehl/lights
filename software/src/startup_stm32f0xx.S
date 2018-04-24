@@ -105,6 +105,7 @@ LoopFillZerobss:
 
 /* Call the application's entry point.*/
   bl SystemInit
+  // bl _start
   bl main
   
 LoopForever:

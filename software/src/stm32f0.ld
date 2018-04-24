@@ -88,10 +88,10 @@ SECTIONS
   } >FLASH
   .init_array :
   {
-    PROVIDE_HIDDEN (__init_array_start = .);
+    __init_array_start = .;
     KEEP (*(SORT(.init_array.*)))
     KEEP (*(.init_array*))
-    PROVIDE_HIDDEN (__init_array_end = .);
+    __init_array_end = .;
   } >FLASH
   .fini_array :
   {

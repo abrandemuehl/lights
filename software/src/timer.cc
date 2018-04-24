@@ -25,6 +25,8 @@ void Timer::Start(uint16_t period_us) {
   uint16_t freq = 1000000 / period_us;
   uint16_t period = (SystemCoreClock / freq) - 1;
 
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1 , ENABLE);
+
   TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
   TIM_TimeBaseStructure.TIM_Prescaler = 0;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
