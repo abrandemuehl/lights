@@ -123,11 +123,11 @@ LoopForever:
  * @retval : None
 */
     .section .text.Default_Handler,"ax",%progbits
-Default_Handler:
-Infinite_Loop:
-  wfi
-  b Infinite_Loop
-  .size Default_Handler, .-Default_Handler
+// Default_Handler:
+// Infinite_Loop:
+//   b Infinite_Loop
+//   .size Default_Handler, .-Default_Handler
+
 /******************************************************************************
 *
 * The minimal vector table for a Cortex M0.  Note that the proper constructs
@@ -203,7 +203,7 @@ g_pfnVectors:
   .thumb_set NMI_Handler,Default_Handler
 
   .weak HardFault_Handler
-  .thumb_set HardFault_Handler,Default_Handler
+  // .thumb_set HardFault_Handler,Default_Handler
 
   .weak SVC_Handler
   .thumb_set SVC_Handler,Default_Handler

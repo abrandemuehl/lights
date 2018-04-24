@@ -1,57 +1,16 @@
 #pragma once
+#include <stdint.h>
 
-template <class T, int S>
-class RingBuffer {
- public:
-  RingBuffer() : start_(0), end_(1) {}
+#define BUFFER_SIZE (256)
+typedef struct {
+  int start;
+  int end;
+  char data[BUFFER_SIZE];
+} Buffer;
 
-  bool Get(T *result) {
-    // Check for empty
-    if (end_ == indexInc(start_)) {
-      return false;
-    }
-    // Start points to the location where the oldest message is
-    // End points to where the new message should be placed
+void bufferInit(Buffer *buf);
 
-    *result = data_[start_];
-    start_ = indexInc(start_);
-  }
+int bufferGet(Buffer *buf, uint8_t *data, int n);
+int bufferPut(Buffer *buf, uint8_t *data, int n);
 
-  int Read(T *result, int n) {
-    for(int i=0; i < n; i++) {
-      if(!Get(&result[i])) {
-        return i;
-      }
-    }
-    return n;
-  }
-
-  bool Put(T data, bool force=true) {
-    if (!force) {
-      // Check for full
-      if (start_ == end_) {
-        return false;
-      }
-    }
-    // Buffer items get placed in end
-    data_[end_] = data;
-    end_ = indexInc(end_);
-    return true;
-  }
-
- private:
-  // Start+1 == end -> Empty
-  // Start == end -> Full
-  int start_;
-  int end_;
-  T data_[S + 1];
-
-  inline int indexInc(int idx) { return (idx + 1) % S; }
-
-  inline int space() {
-    if (start_ > end_) {
-      return S - (start_ - end_);
-    }
-    return end_ - start_;
-  }
-};
+int bufferIndexInc(int idx);

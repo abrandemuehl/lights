@@ -1,26 +1,6 @@
 #include "timer.h"
 
-namespace stm32 {
-
-Timer Timer1(1, TIM1, GPIOA, RCC_AHBPeriph_GPIOA, GPIO_Pin_8, GPIO_Pin_9,
-             GPIO_Pin_10, GPIO_Pin_11, GPIO_AF_2);
-
-Timer::Timer(int index, TIM_TypeDef *timer, GPIO_TypeDef *gpio,
-             uint32_t gpio_rcc, uint16_t pin1, uint16_t pin2, uint16_t pin3,
-             uint16_t pin4, uint8_t pin_af)
-    : index_(index),
-      timer_(timer),
-      gpio_(gpio),
-      gpio_rcc_(gpio_rcc),
-      pin_af_(pin_af) {
-  pins[0] = pin1;
-  pins[1] = pin2;
-  pins[2] = pin3;
-  pins[3] = pin4;
-}
-
-void Timer::Start(uint16_t period_us) {
-  period_ = period_us;
+void initTimer(uint32_t period_us) {
 
   uint16_t freq = 1000000 / period_us;
   uint16_t period = (SystemCoreClock / freq) - 1;
@@ -34,31 +14,26 @@ void Timer::Start(uint16_t period_us) {
   TIM_TimeBaseStructure.TIM_ClockDivision = 0;
   TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
 
-  TIM_TimeBaseInit(timer_, &TIM_TimeBaseStructure);
-  TIM_Cmd(timer_, ENABLE);
-  TIM_CtrlPWMOutputs(timer_, ENABLE);
-}
+  TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
+  TIM_Cmd(TIM1, ENABLE);
+  TIM_CtrlPWMOutputs(TIM1, ENABLE);
 
-void Timer::EnableOutputChannel(uint8_t channel) {
-  if (channel >= 4) {
-    // TODO: Throw error
-    return;
-  }
-  TIM_Cmd(timer_, DISABLE);
-  TIM_CtrlPWMOutputs(timer_, DISABLE);
+
+  TIM_Cmd(TIM1, DISABLE);
+  TIM_CtrlPWMOutputs(TIM1, DISABLE);
 
   // Enable GPIO Bank for output pin
-  RCC_AHBPeriphClockCmd(gpio_rcc_, ENABLE);
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
 
   GPIO_InitTypeDef GPIO_InitStructure;
-  GPIO_InitStructure.GPIO_Pin = pins[channel - 1];
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
 
-  GPIO_PinAFConfig(GPIOA, pins[channel - 1], pin_af_);
+  GPIO_PinAFConfig(GPIOA, GPIO_PinSource8, GPIO_AF_2);
 
   TIM_OCInitTypeDef TIM_OCInitStructure;
   TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM2;
@@ -69,10 +44,25 @@ void Timer::EnableOutputChannel(uint8_t channel) {
   TIM_OCInitStructure.TIM_OCNPolarity = TIM_OCNPolarity_High;
   TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Set;
   TIM_OCInitStructure.TIM_OCNIdleState = TIM_OCIdleState_Reset;
-  TIM_OC1Init(timer_, &TIM_OCInitStructure);
+  TIM_OC1Init(TIM1, &TIM_OCInitStructure);
 
-  TIM_Cmd(timer_, ENABLE);
-  TIM_CtrlPWMOutputs(timer_, ENABLE);
+  TIM_Cmd(TIM1, ENABLE);
+  TIM_CtrlPWMOutputs(TIM1, ENABLE);
 }
 
-}  // namespace stm32
+void timerSetDuty(float duty) {
+  if (duty > 100.0f)
+    duty = 100.0f;
+  else if (duty < 0.0f)
+    duty = 0.0f;
+
+  TIM_OCInitTypeDef TIM_OCStruct;
+
+  TIM_OCStruct.TIM_OCMode = TIM_OCMode_PWM1;
+  TIM_OCStruct.TIM_OutputState = TIM_OutputState_Enable;
+  TIM_OCStruct.TIM_OCPolarity = TIM_OCPolarity_High;
+  TIM_OCStruct.TIM_Pulse = (100.0f + (duty / 100.0f)*(100.0f));
+
+  TIM_OC1Init(TIM1, &TIM_OCStruct);
+  TIM_OC1PreloadConfig(TIM1, TIM_OCPreload_Enable);
+}
