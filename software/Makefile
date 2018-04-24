@@ -31,7 +31,7 @@ CFLAGS += -mfloat-abi=soft
 CFLAGS += $(DEFINES) $(INCLUDES)
 
 
-
+# Must include BOTH -mcpu=cortex-m0 and -mthumb for integer division library to be linked
 LDFLAGS=-mcpu=cortex-m0 -mthumb -T$(LDSCRIPT) # -Wl,-wrap,__aeabi_unwind_cpp_pr0 -Wl,-wrap,__aeabi_unwind_cpp_pr1 -Wl,-wrap,__aeabi_unwind_cpp_pr2 -Wl,-wrap,atexit
 LDFLAGS+= # -specs=nano.specs
 # Get floating point functions

@@ -20,10 +20,17 @@ int main() {
   GPIO_Init(GPIOB, &GPIO_InitStructure);
 
   initUsarts();
-  // console_init();
-  
-  for(int i=0; i < 10; i++) {
-    usartWrite(USART1, "hi\n", 3);
+
+  usartWrite(USART1, (uint8_t *)"Startup\n", 8);
+
+  while(1) {
+    // Echo all characters
+    uint8_t ch;
+    while(1) {
+      if(usartRead(USART1, &ch, 1) != 0) {
+        usartWrite(USART1, &ch, 1);
+      }
+    }
   }
 
   while (1) {
