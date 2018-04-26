@@ -34,24 +34,24 @@ void initUsarts() {
   GPIO_PinAFConfig(GPIOA, GPIO_PinSource10, GPIO_AF_1);
 
   // Usart 3
-  GPIO_PinAFConfig(GPIOB, GPIO_PinSource10, GPIO_AF_0);
-  GPIO_PinAFConfig(GPIOB, GPIO_PinSource11, GPIO_AF_0);
+  GPIO_PinAFConfig(GPIOB, GPIO_PinSource10, GPIO_AF_4);
+  GPIO_PinAFConfig(GPIOB, GPIO_PinSource11, GPIO_AF_4);
 
   // Usart 4
-  GPIO_PinAFConfig(GPIOA, GPIO_PinSource0, GPIO_AF_0);
-  GPIO_PinAFConfig(GPIOA, GPIO_PinSource1, GPIO_AF_0);
+  GPIO_PinAFConfig(GPIOA, GPIO_PinSource0, GPIO_AF_4);
+  GPIO_PinAFConfig(GPIOA, GPIO_PinSource1, GPIO_AF_4);
 
   // Usart 5
-  GPIO_PinAFConfig(GPIOB, GPIO_PinSource3, GPIO_AF_0);
-  GPIO_PinAFConfig(GPIOB, GPIO_PinSource4, GPIO_AF_0);
+  GPIO_PinAFConfig(GPIOB, GPIO_PinSource3, GPIO_AF_4);
+  GPIO_PinAFConfig(GPIOB, GPIO_PinSource4, GPIO_AF_4);
 
   // Usart 6
-  GPIO_PinAFConfig(GPIOA, GPIO_PinSource4, GPIO_AF_0);
-  GPIO_PinAFConfig(GPIOA, GPIO_PinSource5, GPIO_AF_0);
+  GPIO_PinAFConfig(GPIOA, GPIO_PinSource4, GPIO_AF_5);
+  GPIO_PinAFConfig(GPIOA, GPIO_PinSource5, GPIO_AF_5);
 
   GPIO_InitTypeDef GPIO_InitStructure;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
 
@@ -130,7 +130,7 @@ void initUsarts() {
 
 void usartWrite(USART_TypeDef *usart, uint8_t *data, unsigned int n) {
   for(unsigned int i=0; i < n; i++) {
-    USART_SendData(USART1, (uint16_t)data[i]);
+    USART_SendData(usart, (uint16_t)data[i]);
     while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
   }
 }
