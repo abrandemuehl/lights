@@ -43,3 +43,81 @@ void console_init() {
   USART_Cmd(USART1, ENABLE);
   NVIC_EnableIRQ(USART1_IRQn);
 }
+
+
+void printHex(uint32_t num) {
+  PRINT("0x");
+
+  // One hex digit is 4 bits
+  uint8_t digit;
+  uint8_t display;
+  for(int i=0; i < 8; i++) {
+    digit = ((num & 0xF0000000) >> 28) & 0x0F;
+    if(digit < 10) {
+      display = '0' + digit;
+    } else {
+      display = 'A' + (digit - 10);
+    }
+    usartWrite(USART1, &display, 1);
+    num = num << 4;
+  }
+}
+
+void printByte(uint8_t num) {
+  PRINT("0x");
+
+  // One hex digit is 4 bits
+  uint8_t digit;
+  uint8_t display;
+  for(int i=0; i < 2; i++) {
+    digit = ((num & 0xF0) >> 4) & 0x0F;
+    if(digit < 10) {
+      display = '0' + digit;
+    } else {
+      display = 'A' + (digit - 10);
+    }
+    usartWrite(USART1, &display, 1);
+    num = num << 4;
+  }
+}
+void printDec(int32_t num) {
+  uint8_t digit;
+  uint8_t display;
+  if(num < 0) {
+    PRINT("-");
+    num *= -1;
+  }
+  do {
+    digit = num % 10;
+    display = '0' + digit;
+    usartWrite(USART1, &display, 1);
+    num = num / 10;
+  } while(num > 0);
+}
+
+void printBin(uint32_t num) {
+  PRINT("0b");
+  
+  for(int i=0; i < 32; i++) {
+    uint8_t bit = (num & 0x80000000) != 0 ? '1' : '0';
+    usartWrite(USART1, &bit, 1);
+    num = num << 1;
+  }
+}
+
+
+void printFloat(float num) {
+  if(num < 0) {
+    PRINT('-');
+    num *= -1;
+  }
+  printDec((int32_t)num);
+
+  num -= (int32_t)num;
+
+  PRINT('.');
+
+  // Print with three decimal places of accuracy
+  num *= 1000;
+  printDec((int32_t)num);
+}

@@ -1,6 +1,7 @@
 #include "usart.h"
 #include <stm32f0xx.h>
 #include "ringbuffer.h"
+#include "console.h"
 
 
 Buffer usart1_buf;
@@ -176,6 +177,9 @@ void USART3_6_IRQHandler(void) {
 
   if (USART_GetITStatus(USART5, USART_IT_RXNE) != RESET) {
     uint8_t ch = USART_ReceiveData(USART5);
+    PRINT("Received char ");
+    printByte(ch);
+    PRINT("\n");
     bufferPut(&usart5_buf, &ch, 1);
   }
 

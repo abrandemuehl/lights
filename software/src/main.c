@@ -2,10 +2,12 @@
 #include <stm32f0xx.h>
 #include <stdint.h>
 #include "console.h"
-#include "timer.h"
 #include "usart.h"
+#include "timer.h"
+#include "protocol.h"
 
 void OutputMCO();
+
 int main() {
 
   GPIO_InitTypeDef GPIO_InitStructure;
@@ -21,24 +23,50 @@ int main() {
 
   initUsarts();
 
-  usartWrite(USART1, (uint8_t *)"Startup\n", 8);
+  PRINT("Startup\n");
 
+  protocolInit();
+
+  while(1) {
+    protocolProcessMessages();
+  }
+
+  // while(1) {
+  //   GPIOB->BSRR = 0x0080;
+  //   // usartWrite(USART5, (uint8_t *)"hello\n", 6);
+  //   // for (int i = 0; i < 5000000; i++)
+  //   //   ;
+
+  //   GPIOB->BRR = 0x0080;
+  //   // for (int i = 0; i < 5000000; i++)
+  //   //   ;
+  // }
+
+
+  // usartWrite(USART5, "Hello\n", sizeof("Hello\n"));
+  // usartWrite(USART3, "Hello\n", sizeof("Hello\n"));
   while(1) {
     // Echo all characters
     uint8_t ch;
     while(1) {
-      if(usartRead(USART1, &ch, 1) != 0) {
+      if(usartRead(USART5, &ch, 1) != 0) {
         usartWrite(USART1, &ch, 1);
+        // PRINT("Got ");
+        // printByte(ch);
+        // PRINT("\n");
       }
     }
   }
 
+  initTimer();
+  timerSetDuty(0.0);
+
   while (1) {
     GPIOB->BSRR = 0x0080;
-    for (int i = 0; i < 100000; i++)
+    for (int i = 0; i < 5000000; i++)
       ;
     GPIOB->BRR = 0x0080;
-    for (int i = 0; i < 100000; i++)
+    for (int i = 0; i < 5000000; i++)
       ;
   }
 

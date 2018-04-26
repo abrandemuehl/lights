@@ -1,4 +1,5 @@
 #include "ringbuffer.h"
+#include "console.h"
 
 void bufferInit(Buffer *buf) {
   buf->start = 0;
@@ -10,7 +11,6 @@ int bufferGet(Buffer *buf, uint8_t *data, int n) {
   for(int i=0; i < n; i++) {
     if(buf->start == buf->end) {
       return read;
-
     }
 
     data[i] = buf->data[buf->start];
@@ -23,6 +23,7 @@ int bufferPut(Buffer *buf, uint8_t *data, int n) {
   int written = 0;
   for(int i=0; i < n; i++) {
     if(buf->start == bufferIndexInc(buf->end)) {
+      PRINT("Put buffer full\n");
       return written;
     }
 
