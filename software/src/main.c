@@ -5,6 +5,7 @@
 #include "usart.h"
 #include "timer.h"
 #include "protocol.h"
+#include "rtc.h"
 
 void OutputMCO();
 
@@ -25,10 +26,15 @@ int main() {
 
   PRINT("Startup\n");
 
+  initTimer();
+  initRTC();
   protocolInit();
 
+  PRINT("Main loop\n");
+  RTC_TimeTypeDef  RTC_TimeStruct;   
+  RTC_TimeStructInit(&RTC_TimeStruct); 
   while(1) {
-    protocolProcessMessages();
+    protocolStep();
   }
 
   // while(1) {
@@ -58,8 +64,6 @@ int main() {
     }
   }
 
-  initTimer();
-  timerSetDuty(0.0);
 
   while (1) {
     GPIOB->BSRR = 0x0080;

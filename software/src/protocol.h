@@ -4,3 +4,4 @@
 void protocolInit();
 
 void protocolProcessMessages();
+void protocolStep();

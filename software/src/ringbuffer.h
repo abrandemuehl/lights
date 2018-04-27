@@ -13,4 +13,6 @@ void bufferInit(Buffer *buf);
 int bufferGet(Buffer *buf, uint8_t *data, int n);
 int bufferPut(Buffer *buf, uint8_t *data, int n);
 
+int bufferSize(Buffer *buf);
+
 int bufferIndexInc(int idx);

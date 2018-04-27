@@ -9,6 +9,7 @@ void console_init();
 void printDec(int32_t num);
 void printHex(uint32_t num);
 void printByte(uint8_t num);
+void printByteBin(uint8_t num);
 void printBin(uint32_t num);
 void printFloat(float num);
 

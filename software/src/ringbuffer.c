@@ -34,4 +34,12 @@ int bufferPut(Buffer *buf, uint8_t *data, int n) {
   return written;
 }
 
+
+int bufferSize(Buffer *buf) {
+  if(buf->start <= buf->end) {
+    return buf->end - buf->start;
+  }
+  return (BUFFER_SIZE - buf->start) + buf->end;
+}
+
 int bufferIndexInc(int idx) { return (idx + 1) % BUFFER_SIZE; }

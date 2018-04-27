@@ -54,32 +54,49 @@ void initUsarts() {
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
 
   // Usart 1
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 | GPIO_Pin_10;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
 
+  // Communication usarts should not pull up RX
+
   // Usart 3
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10 | GPIO_Pin_11;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
+  GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
   GPIO_Init(GPIOB, &GPIO_InitStructure);
 
   // Usart 4
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
 
   // Usart 5
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_4;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
+  GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
   GPIO_Init(GPIOB, &GPIO_InitStructure);
 
   // Usart 6
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
 
+
+
   // Don't pull the Rx Pin
-  /* GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL; */
-  /* GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10; */
-  /* GPIO_Init(GPIOA, &GPIO_InitStructure); */
 
   // USARTx configured as follow:
   // - BaudRate = 115200 baud
@@ -131,8 +148,14 @@ void initUsarts() {
 
 void usartWrite(USART_TypeDef *usart, uint8_t *data, unsigned int n) {
   for(unsigned int i=0; i < n; i++) {
+    // if(usart != USART1) {
+    //   PRINT("Sending ");
+    //   printByte(data[i]);
+    //   PRINT("\n");
+    // }
+    while (USART_GetFlagStatus(usart, USART_FLAG_TXE) == RESET);
     USART_SendData(usart, (uint16_t)data[i]);
-    while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
+    while (USART_GetFlagStatus(usart, USART_FLAG_TXE) == RESET);
   }
 }
 
@@ -147,6 +170,21 @@ int usartRead(USART_TypeDef *usart, uint8_t *data, unsigned int n) {
     return bufferGet(&usart5_buf, data, n);
   } else if(usart == USART6) {
     return bufferGet(&usart6_buf, data, n);
+  }
+  return -1;
+}
+
+int usartAvailable(USART_TypeDef *usart) {
+  if(usart == USART1) {
+    return bufferSize(&usart1_buf);
+  } else if(usart == USART3) {
+    return bufferSize(&usart3_buf);
+  } else if(usart == USART4) {
+    return bufferSize(&usart4_buf);
+  } else if(usart == USART5) {
+    return bufferSize(&usart5_buf);
+  } else if(usart == USART6) {
+    return bufferSize(&usart6_buf);
   }
   return -1;
 }
@@ -177,9 +215,6 @@ void USART3_6_IRQHandler(void) {
 
   if (USART_GetITStatus(USART5, USART_IT_RXNE) != RESET) {
     uint8_t ch = USART_ReceiveData(USART5);
-    PRINT("Received char ");
-    printByte(ch);
-    PRINT("\n");
     bufferPut(&usart5_buf, &ch, 1);
   }
 

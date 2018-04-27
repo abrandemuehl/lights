@@ -221,7 +221,7 @@ g_pfnVectors:
   .thumb_set PVD_IRQHandler,Default_Handler
   
   .weak RTC_IRQHandler
-  .thumb_set RTC_IRQHandler,Default_Handler
+  // .thumb_set RTC_IRQHandler,Default_Handler
   
   .weak FLASH_IRQHandler
   .thumb_set FLASH_IRQHandler,Default_Handler

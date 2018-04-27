@@ -81,18 +81,24 @@ void printByte(uint8_t num) {
   }
 }
 void printDec(int32_t num) {
+  static uint8_t bytes[100];
   uint8_t digit;
   uint8_t display;
   if(num < 0) {
     PRINT("-");
     num *= -1;
   }
+  int idx = 0;
   do {
     digit = num % 10;
     display = '0' + digit;
-    usartWrite(USART1, &display, 1);
+    bytes[idx++] = display;
     num = num / 10;
   } while(num > 0);
+
+  for(int i = idx-1; i >= 0; i--) {
+    usartWrite(USART1, &bytes[i], 1);
+  }
 }
 
 void printBin(uint32_t num) {
@@ -100,6 +106,15 @@ void printBin(uint32_t num) {
   
   for(int i=0; i < 32; i++) {
     uint8_t bit = (num & 0x80000000) != 0 ? '1' : '0';
+    usartWrite(USART1, &bit, 1);
+    num = num << 1;
+  }
+}
+
+
+void printByteBin(uint8_t num) {
+  for(int i=0; i < 8; i++) {
+    uint8_t bit = (num & 0x80) != 0 ? '1' : '0';
     usartWrite(USART1, &bit, 1);
     num = num << 1;
   }
