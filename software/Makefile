@@ -1,4 +1,5 @@
 PORT=/dev/ttyUSB0
+LEADER=0
 
 
 
@@ -14,7 +15,7 @@ LIBS=lib/stdperiph/system_stm32f0xx.o lib/stdperiph/stm32f0xx_rcc.o lib/stdperip
 OBJS=$(patsubst %.cc,%.o,$(wildcard src/*.cc)) $(patsubst %.c,%.o,$(wildcard src/*.c)) src/startup_stm32f0xx.o
 OBJS += $(LIBS)
 LDSCRIPT=src/stm32f0.ld
-DEFINES=-DSTM32F030xC -DARM_MATH_CM0 -DUSE_STDPERIPH_DRIVER
+DEFINES=-DSTM32F030xC -DARM_MATH_CM0 -DUSE_STDPERIPH_DRIVER -DLEADER=$(LEADER)
 
 # Add HSE frequency
 DEFINES += -DHSE_VALUE='((uint32_t)24000000)'
@@ -53,9 +54,6 @@ all: $(OBJS) $(BINARY)
 %hex: %elf
 	$(OBJCOPY) -O ihex $< $@
 
-# %.o: %.cc
-# 	$(CXX) $(CXXFLAGS) -c $< -o $@
-
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -67,11 +65,19 @@ stm32flash: stm32flash/*
 
 flash: $(BINARY) stm32flash
 	# ./stm32flash/stm32flash -v -i rts,dtr,-dtr,-rts -R -w $< $(PORT)
-	./bootload_mode.py bootload
-	./stm32loader.py -p $(PORT) -ew $(BINARY)
-	./bootload_mode.py reset
+	set -e; \
+	./bootload_mode.py bootload $$i; \
+	sleep 0.5; \
+	for p in $$(ls /dev/ttyUSB*); do \
+		./stm32loader.py -p $$p -ew $(BINARY) & \
+	done; \
+	wait; \
+	./bootload_mode.py reset $$i;
+
+reset: 
+	./bootload_mode.py reset $$i
 
 clean:
 	rm -f $(OBJS) $(BINARY) *.o *.bin *.hex *.elf src/*.o
 
-.PHONY: clean
+.PHONY: clean flash reset

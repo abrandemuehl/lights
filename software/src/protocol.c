@@ -7,13 +7,18 @@
 #include "bitmask.h"
 
 #define USART_N (USART3)
-#define USART_W (USART4)
-#define USART_S (USART5)
-#define USART_E (USART6)
+#define USART_W (USART6)
+#define USART_S (USART4)
+#define USART_E (USART5)
 
-// Frame count must be a divisor of 256 because the counter is one byte
-#define FRAME_COUNT (8)
+// Frame count must be a divisor of 256 because the counter is one byte.
+// Wrapping around will cause a glitch if you don't
+#define FRAME_COUNT (3)
 
+// Declare if this device is the leader
+#ifndef LEADER
+#define LEADER (0)
+#endif
 
 // Represents which way this board is oriented. 
 typedef enum {
@@ -31,6 +36,7 @@ typedef struct {
   Bitmask pattern[FRAME_COUNT];
   uint8_t rotation;
   uint8_t counter;
+  uint8_t shouldReset;
 } State;
 
 
@@ -57,19 +63,35 @@ typedef struct {
   uint8_t complete_pattern;
 } Channel;
 
-Channel channel_N;
-Channel channel_W;
-Channel channel_S;
-Channel channel_E;
+union {
+  struct {
+    Channel N;
+    Channel W;
+    Channel S;
+    Channel E;
+  };
+  Channel array[4];
+} channels;
+
+
 
 
 void processLight();
 void protocolProcessMessages();
 void processChannel(Direction dir);
-void sendSynchronizationMessage(Channel *channel);
+int buildLocationResponseMessage(Channel *channel, uint8_t *buf);
+int buildLocationRequestMessage(uint8_t *buf);
+int buildSynchronizationMessage(uint8_t *buf);
+int buildResetMessage(uint8_t *buf);
+
 void sendLocationResponseMessage(Channel *channel);
 void sendLocationRequestMessage(Channel *channel);
+void sendSynchronizationMessage(Channel *channel);
+void sendResetMessage(Channel *channel);
+
+void sendMessageOutward(uint8_t *data, int n);
 void sendMessage(Channel *channel, uint8_t *data, int n);
+
 int isControlChar(uint8_t ch);
 Direction rotatedDirection(Direction dir);
 
@@ -102,6 +124,9 @@ Direction rotatedDirection(Direction dir) {
  * ---------Synchronization-------
  * uint8_t TYPE = SynchronizationType
  * uint8_t COUNTER
+ *
+ * ---------Reset--------
+ * uint8_t TYPE = ResetType
  */
 
 #define DLE_MASK (0x80)
@@ -115,6 +140,7 @@ typedef enum {
   LocationRequestType=0x20,
   LocationResponseType=0x21,
   SynchronizationType=0x22,
+  ResetType=0x23,
 } PacketType;
 
 int isControlChar(uint8_t ch) {
@@ -154,20 +180,47 @@ void sendMessage(Channel *channel, uint8_t *data, int n) {
   usartWrite(channel->usart, packetized, idx);
 }
 
-// Creates a location message in a buffer
-void sendLocationRequestMessage(Channel *channel) {
-  uint8_t buf[100];
-  buf[0] = SOH;
-  buf[1] = LocationRequestType;
-  buf[2] = ETX;
-
-  sendMessage(channel, buf, 3);
+void sendMessageOutward(uint8_t *msg, int n) {
+  // Send message away from (0,0)
+  if(state.x < 0) {
+    // Send message to the right but not the left
+    sendMessage(&channels.array[rotatedDirection(EAST)], msg, n);
+  } else if (state.x > 0) {
+    // Send message to the left but not the right
+    sendMessage(&channels.array[rotatedDirection(WEST)], msg, n);
+  } else {
+    // Send message left and right
+    sendMessage(&channels.array[rotatedDirection(WEST)], msg, n);
+    sendMessage(&channels.array[rotatedDirection(EAST)], msg, n);
+  }
+  if(state.y < 0) {
+    // Send message down
+    sendMessage(&channels.array[rotatedDirection(SOUTH)], msg, n);
+  } else if(state.y > 0) {
+    // Send message up
+    sendMessage(&channels.array[rotatedDirection(NORTH)], msg, n);
+  } else {
+    // Send message up and down
+    sendMessage(&channels.array[rotatedDirection(NORTH)], msg, n);
+    sendMessage(&channels.array[rotatedDirection(SOUTH)], msg, n);
+  }
 }
 
 // Creates a location message in a buffer
-void sendLocationResponseMessage(Channel *channel) {
-  PRINT("Sending LocationResponseMessage\n");
-  uint8_t buf[256];
+int buildLocationRequestMessage(uint8_t *buf) {
+  buf[0] = SOH;
+  buf[1] = LocationRequestType;
+  buf[2] = ETX;
+  return 3;
+}
+
+void sendLocationRequestMessage(Channel *channel) {
+  uint8_t buf[100];
+  int len = buildLocationRequestMessage(buf);
+  sendMessage(channel, buf, len);
+}
+
+int buildLocationResponseMessage(Channel *channel, uint8_t *buf) {
   int8_t x = state.x;
   int8_t y = state.y;
   switch(rotatedDirection(channel->direction)) {
@@ -197,48 +250,99 @@ void sendLocationResponseMessage(Channel *channel) {
 
   buf[idx++] = ETX;
 
-  sendMessage(channel, buf, idx);
-  return;
+  return idx;
 }
 
 // Creates a location message in a buffer
-void sendSynchronizationMessage(Channel *channel) {
-  uint8_t buf[100];
+void sendLocationResponseMessage(Channel *channel) {
+  PRINT("Sending LocationResponseMessage\n");
+  uint8_t buf[256];
+  int len = buildLocationResponseMessage(channel, buf);
+  sendMessage(channel, buf, len);
+  return;
+}
+
+int buildSynchronizationMessage(uint8_t *buf) {
   buf[0] = SOH;
   buf[1] = SynchronizationType;
   buf[2] = state.counter;
   buf[3] = ETX;
-
-  sendMessage(channel, buf, 4);
+  return 4;
 }
 
+void sendSynchronizationMessage(Channel *channel) {
+  uint8_t buf[100];
+  int len = buildSynchronizationMessage(buf);
+  sendMessage(channel, buf, len);
+}
+
+int buildResetMessage(uint8_t *buf) {
+  buf[0] = SOH;
+  buf[1] = ResetType;
+  buf[2] = ETX;
+  return 3;
+}
+
+void sendResetMessage(Channel *channel) {
+  uint8_t buf[100];
+  int len = buildResetMessage(buf);
+  sendMessage(channel, buf, len);
+}
 
 void protocolInit() {
   memset(&state, 0, sizeof(state));
 
   // Reset all state machines
-  memset(&channel_N, 0, sizeof(channel_N));
-  memset(&channel_W, 0, sizeof(channel_W));
-  memset(&channel_S, 0, sizeof(channel_S));
-  memset(&channel_E, 0, sizeof(channel_E));
-  channel_N.usart = USART_N;
-  channel_W.usart = USART_W;
-  channel_S.usart = USART_S;
-  channel_E.usart = USART_E;
+  memset(&channels, 0, sizeof(channels));
+  // memset(&channel_N, 0, sizeof(channel_N));
+  // memset(&channel_W, 0, sizeof(channel_W));
+  // memset(&channel_S, 0, sizeof(channel_S));
+  // memset(&channel_E, 0, sizeof(channel_E));
+  channels.N.usart = USART_N;
+  channels.W.usart = USART_W;
+  channels.S.usart = USART_S;
+  channels.E.usart = USART_E;
 
-  channel_N.direction = NORTH;
-  channel_W.direction = WEST;
-  channel_S.direction = SOUTH;
-  channel_E.direction = EAST;
+  channels.N.direction = NORTH;
+  channels.W.direction = WEST;
+  channels.S.direction = SOUTH;
+  channels.E.direction = EAST;
 
-  channel_N.step = 0;
-  channel_W.step = 0;
-  channel_S.step = 0;
-  channel_E.step = 0;
-  sendLocationRequestMessage(&channel_N);
-  sendLocationRequestMessage(&channel_E);
-  sendLocationRequestMessage(&channel_S);
-  sendLocationRequestMessage(&channel_W);
+  channels.N.step = 0;
+  channels.W.step = 0;
+  channels.S.step = 0;
+  channels.E.step = 0;
+
+#if LEADER
+  // Pattern
+  bitmaskWrite(state.pattern[0], 0, 0, 1);
+  bitmaskWrite(state.pattern[1], 0, 0, 0);
+  bitmaskWrite(state.pattern[2], 0, 0, 0);
+
+  bitmaskWrite(state.pattern[0], -1, 0, 0);
+  bitmaskWrite(state.pattern[1], -1, 0, 1);
+  bitmaskWrite(state.pattern[2], -1, 0, 0);
+
+  bitmaskWrite(state.pattern[0], -2, 0, 0);
+  bitmaskWrite(state.pattern[1], -2, 0, 0);
+  bitmaskWrite(state.pattern[2], -2, 0, 1);
+
+  bitmaskWrite(state.pattern[0], 1, 0, 0);
+  bitmaskWrite(state.pattern[1], 1, 0, 1);
+  bitmaskWrite(state.pattern[2], 1, 0, 0);
+
+  bitmaskWrite(state.pattern[0], 2, 0, 0);
+  bitmaskWrite(state.pattern[1], 2, 0, 0);
+  bitmaskWrite(state.pattern[2], 2, 0, 1);
+  bitmaskPrint(state.pattern[0]);
+  bitmaskPrint(state.pattern[1]);
+  bitmaskPrint(state.pattern[2]);
+  state.initialized = 1;
+#else // LEADER
+  sendLocationRequestMessage(&channels.N);
+  sendLocationRequestMessage(&channels.E);
+  sendLocationRequestMessage(&channels.S);
+  sendLocationRequestMessage(&channels.W);
 
 
   for(int i=0; i < 5; i++) {
@@ -259,24 +363,11 @@ void protocolInit() {
     PRINT("No neighbors. Assigning (0,0)\n");
     state.initialized = 1;
   }
-
-  bitmaskWrite(state.pattern[0], 0, 0, 0);
-  bitmaskWrite(state.pattern[1], 0, 0, 0);
-  bitmaskWrite(state.pattern[2], 0, 0, 0);
-  bitmaskWrite(state.pattern[3], 0, 0, 0);
-  bitmaskWrite(state.pattern[4], 0, 0, 1);
-  bitmaskWrite(state.pattern[5], 0, 0, 1);
-  bitmaskWrite(state.pattern[6], 0, 0, 1);
-  bitmaskWrite(state.pattern[7], 0, 0, 1);
-
-  bitmaskWrite(state.pattern[0], 0, -1, 1);
-  bitmaskWrite(state.pattern[1], 0, -1, 1);
-  bitmaskWrite(state.pattern[2], 0, -1, 1);
-  bitmaskWrite(state.pattern[3], 0, -1, 1);
-  bitmaskWrite(state.pattern[4], 0, -1, 0);
-  bitmaskWrite(state.pattern[5], 0, -1, 0);
-  bitmaskWrite(state.pattern[6], 0, -1, 0);
-  bitmaskWrite(state.pattern[7], 0, -1, 0);
+#endif // LEADER
+  // Reset all neighbors outwards
+  uint8_t resetMsg[100];
+  int len = buildResetMessage(resetMsg);
+  sendMessageOutward(resetMsg, len);
 
 }
 
@@ -286,16 +377,16 @@ void processChannel(Direction dir) {
 
   switch(dir) {
     case NORTH:
-      channel = &channel_N;
+      channel = &channels.N;
       break;
     case WEST:
-      channel = &channel_W;
+      channel = &channels.W;
       break;
     case SOUTH:
-      channel = &channel_S;
+      channel = &channels.S;
       break;
     case EAST:
-      channel = &channel_E;
+      channel = &channels.E;
       break;
   }
 
@@ -306,9 +397,9 @@ void processChannel(Direction dir) {
   // int x;
   // int frame;
   while(usartRead(channel->usart, &data, 1) > 0) {
-    PRINT("Received Data ");
-    printByte(data);
-    PRINT("\n");
+    // PRINT("Received Data ");
+    // printByte(data);
+    // PRINT("\n");
     // PRINT("Available: ");
     // printDec(usartAvailable(channel->usart));
     // PRINT("\n");
@@ -323,31 +414,34 @@ void processChannel(Direction dir) {
       channel->delimited = 0;
     }
 
-    PRINT("Step: ");
-    printDec(channel->step);
-    PRINT("\n");
+    // PRINT("Step: ");
+    // printDec(channel->step);
+    // PRINT("\n");
 
     switch (channel->step) {
       case 0: // SOH
         if(data == SOH) {
-          channel->step = 1;
-          PRINT("SOH\n");
+          channel->step++;
+          // PRINT("SOH\n");
         }
         break;
       case 1: // Type
         channel->type = data;
         switch(data) {
           case LocationRequestType:
-            PRINT("LocationRequestType\n");
+            // PRINT("LocationRequestType\n");
             channel->step = 2;
             break;
           case LocationResponseType:
-            PRINT("LocationResponseType\n");
+            // PRINT("LocationResponseType\n");
             channel->step = 50;
             break;
           case SynchronizationType:
-            PRINT("SynchronizationType\n");
+            // PRINT("SynchronizationType\n");
             channel->step = 25;
+            break;
+          case ResetType:
+            channel->step = 10;
             break;
           default:
             channel->step = 0;
@@ -357,7 +451,6 @@ void processChannel(Direction dir) {
       case 2: // Location request message
         // Receive an ETX
         if(data == ETX) {
-          PRINT("ETX\n");
           if(!state.initialized) {
             // Disregard message
             PRINT("Disregarding. Not initialized yet\n");
@@ -365,10 +458,17 @@ void processChannel(Direction dir) {
             // Send a position response message
             PRINT("Responding to locationRequest\n");
             sendLocationResponseMessage(channel);
-            PRINT("Done sending location\n");
+            // PRINT("Done sending location\n");
           }
         } else {
           PRINT("Not ETX\n");
+        }
+        channel->step = 0;
+        break;
+      case 10: // Reset message
+        if(data == ETX) {
+          // Trigger a protocol reset
+          state.shouldReset = 1;
         }
         channel->step = 0;
         break;
@@ -384,9 +484,9 @@ void processChannel(Direction dir) {
           state.counter = channel->counter;
           processLight();
           PRINT("Clock synchronized\n");
-          PRINT("Counter: ");
-          printDec(state.counter);
-          PRINT("\n");
+          // PRINT("Counter: ");
+          // printDec(state.counter);
+          // PRINT("\n");
         }
         channel->step = 0;
         break;
@@ -436,17 +536,22 @@ void processChannel(Direction dir) {
     // If we get a complete update, and we aren't already initialized
     if(channel->complete_pattern && !state.initialized) {
       PRINT("Got a location\n");
+#if LEADER
+      // Make sure the position is 0
+      state.x = 0;
+      state.y = 0;
+#else
       // Copy data into location
       state.x = channel->location_x;
       state.y = channel->location_y;
+#endif
       state.counter = channel->counter;
 
+      // Keep the pattern even if this is the leader
       memcpy(state.pattern, channel->pattern, sizeof(channel->pattern));
 
 
       // Need to rotate the device based on which direction the data came from
-
-
 
       /* Final configuration
        *        N                N                       
@@ -515,16 +620,23 @@ void processChannel(Direction dir) {
       printDec(state.rotation);
       PRINT("\n");
 
-      for(int i=0; i < FRAME_COUNT; i++) {
-        // PRINT("Frame ");
-        // printDec(i);
-        // PRINT("\n");
-        // bitmaskPrint(state.pattern[i]);
-      }
+      // for(int i=0; i < FRAME_COUNT; i++) {
+      //   PRINT("Frame ");
+      //   printDec(i);
+      //   PRINT("\n");
+      //   bitmaskPrint(state.pattern[i]);
+      // }
 
       state.initialized = 1;
 
       channel->complete_pattern = 0;
+
+#if LEADER
+      // Reset all neighbors outwards
+      uint8_t resetMsg[100];
+      int len = buildResetMessage(resetMsg);
+      sendMessageOutward(resetMsg, len);
+#endif
     }
   }
 }
@@ -542,32 +654,41 @@ void processLight() {
   int frame = state.counter % FRAME_COUNT;
   uint8_t on = bitmaskGet(state.pattern[frame], state.x, state.y);
 
-  // bitmaskPrint(state.pattern[frame]);
+  bitmaskPrint(state.pattern[frame]);
   if(on) {
-    // PRINT("LIGHT ON\n");
+    PRINT("LIGHT ON\n");
     timerSetDuty(90.0);
     GPIOB->BRR = 0x0080;
   } else {
-    // PRINT("LIGHT OFF\n");
+    PRINT("LIGHT OFF\n");
     timerSetDuty(0.0);
     GPIOB->BSRR = 0x0080;
   }
   // Synchronize once per 5 second
-  // PRINT("counter ");
-  // printDec(state.counter);
-  // PRINT("\n");
-  if(state.x == 0 && state.y == 0) {
-    if(state.counter % (1) == 0) {
-      PRINT("Sending synchronization message\n");
-      sendSynchronizationMessage(&channel_N);
-      sendSynchronizationMessage(&channel_W);
-      sendSynchronizationMessage(&channel_S);
-      sendSynchronizationMessage(&channel_E);
-    }
+  PRINT("counter ");
+  printDec(state.counter);
+  PRINT("\n");
+  if(state.counter % (1) == 0) {
+    PRINT("(");
+    printDec(state.x);
+    PRINT(",");
+    printDec(state.y);
+    PRINT(")\n");
+    PRINT("Sending synchronization message\n");
+
+    // Send synchronization away from (0,0)
+    uint8_t buf[10];
+    int len = buildSynchronizationMessage(buf);
+    sendMessageOutward(buf, len);
   }
 }
 
 void protocolStep() {
+  if(state.shouldReset) {
+    PRINT("Resetting\n");
+    state.initialized = 0;
+    protocolInit();
+  }
   protocolProcessMessages();
   if(rtcGetAndClear()) {
     processLight();
