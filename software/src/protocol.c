@@ -11,7 +11,8 @@
 #define USART_S (USART5)
 #define USART_E (USART6)
 
-#define FRAME_COUNT (5)
+// Frame count must be a divisor of 256 because the counter is one byte
+#define FRAME_COUNT (8)
 
 
 // Represents which way this board is oriented. 
@@ -260,16 +261,22 @@ void protocolInit() {
   }
 
   bitmaskWrite(state.pattern[0], 0, 0, 0);
-  bitmaskWrite(state.pattern[1], 0, 0, 1);
-  bitmaskWrite(state.pattern[2], 0, 0, 1);
-  bitmaskWrite(state.pattern[3], 0, 0, 1);
+  bitmaskWrite(state.pattern[1], 0, 0, 0);
+  bitmaskWrite(state.pattern[2], 0, 0, 0);
+  bitmaskWrite(state.pattern[3], 0, 0, 0);
   bitmaskWrite(state.pattern[4], 0, 0, 1);
+  bitmaskWrite(state.pattern[5], 0, 0, 1);
+  bitmaskWrite(state.pattern[6], 0, 0, 1);
+  bitmaskWrite(state.pattern[7], 0, 0, 1);
 
-  bitmaskWrite(state.pattern[0], 0, -1, 0);
+  bitmaskWrite(state.pattern[0], 0, -1, 1);
   bitmaskWrite(state.pattern[1], 0, -1, 1);
   bitmaskWrite(state.pattern[2], 0, -1, 1);
   bitmaskWrite(state.pattern[3], 0, -1, 1);
-  bitmaskWrite(state.pattern[4], 0, -1, 1);
+  bitmaskWrite(state.pattern[4], 0, -1, 0);
+  bitmaskWrite(state.pattern[5], 0, -1, 0);
+  bitmaskWrite(state.pattern[6], 0, -1, 0);
+  bitmaskWrite(state.pattern[7], 0, -1, 0);
 
 }
 

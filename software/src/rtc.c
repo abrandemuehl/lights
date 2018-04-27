@@ -4,7 +4,7 @@
 
 __IO uint8_t flag;
 
-void initRTC(float period) {
+void initRTC() {
   RTC_InitTypeDef RTC_InitStructure;
   RTC_TimeTypeDef  RTC_TimeStruct;
     
@@ -75,7 +75,7 @@ void initRTC(float period) {
   
   /* Set AlarmA subseconds and enable SubSec Alarm : generate 8 interripts per Second */
   // RTC_AlarmSubSecondConfig(RTC_Alarm_A, 0xff, RTC_AlarmSubSecondMask_SS14_5);
-  RTC_AlarmSubSecondConfig(RTC_Alarm_A, 0x1, RTC_AlarmSubSecondMask_None);
+  RTC_AlarmSubSecondConfig(RTC_Alarm_A, 0x0, RTC_AlarmSubSecondMask_None);
 
   flag = 0;
 
