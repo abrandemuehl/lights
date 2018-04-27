@@ -1,6 +1,6 @@
 #pragma once
 
-void initRTC();
+void initRTC(float period);
 
 // Wait until the next rtc tick arrives
 void rtcWait();

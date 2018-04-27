@@ -4,7 +4,7 @@
 
 __IO uint8_t flag;
 
-void initRTC() {
+void initRTC(float period) {
   RTC_InitTypeDef RTC_InitStructure;
   RTC_TimeTypeDef  RTC_TimeStruct;
     
@@ -74,7 +74,8 @@ void initRTC() {
   RTC_SetAlarm(RTC_Format_BCD, RTC_Alarm_A, &RTC_AlarmStructure);
   
   /* Set AlarmA subseconds and enable SubSec Alarm : generate 8 interripts per Second */
-  RTC_AlarmSubSecondConfig(RTC_Alarm_A, 0xFF, RTC_AlarmSubSecondMask_SS14_5);
+  // RTC_AlarmSubSecondConfig(RTC_Alarm_A, 0xff, RTC_AlarmSubSecondMask_SS14_5);
+  RTC_AlarmSubSecondConfig(RTC_Alarm_A, 0x1, RTC_AlarmSubSecondMask_None);
 
   flag = 0;
 
@@ -91,12 +92,14 @@ void initRTC() {
 
 void rtcReset() {
   /* Set the time to 00h 00mn 00s AM */
-  RTC_TimeTypeDef  RTC_TimeStruct;
-  RTC_TimeStruct.RTC_H12     = RTC_H12_AM;
-  RTC_TimeStruct.RTC_Hours   = 0x00;
-  RTC_TimeStruct.RTC_Minutes = 0x00;
-  RTC_TimeStruct.RTC_Seconds = 0x00;  
-  RTC_SetTime(RTC_Format_BCD, &RTC_TimeStruct);
+  // RTC_TimeTypeDef  RTC_TimeStruct;
+  // RTC_TimeStruct.RTC_H12     = RTC_H12_AM;
+  // RTC_TimeStruct.RTC_Hours   = 0x00;
+  // RTC_TimeStruct.RTC_Minutes = 0x00;
+  // RTC_TimeStruct.RTC_Seconds = 0x00;  
+  // RTC_SetTime(RTC_Format_BCD, &RTC_TimeStruct);
+
+  RTC->SSR &= ~(RTC_SSR_SS);
 }
 
 void rtcWait() {

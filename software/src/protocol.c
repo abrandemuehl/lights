@@ -13,6 +13,7 @@
 
 #define FRAME_COUNT (5)
 
+
 // Represents which way this board is oriented. 
 typedef enum {
   NORTH=0,
@@ -28,7 +29,7 @@ typedef struct {
   uint8_t initialized;
   Bitmask pattern[FRAME_COUNT];
   uint8_t rotation;
-  uint32_t counter;
+  uint8_t counter;
 } State;
 
 
@@ -49,7 +50,7 @@ typedef struct {
   int8_t location_y;
   // Received orientation from neighbors
   uint8_t orientation;
-  uint32_t counter;
+  uint8_t counter;
   Bitmask pattern[FRAME_COUNT];
   int pattern_idx;
   uint8_t complete_pattern;
@@ -59,6 +60,17 @@ Channel channel_N;
 Channel channel_W;
 Channel channel_S;
 Channel channel_E;
+
+
+void processLight();
+void protocolProcessMessages();
+void processChannel(Direction dir);
+void sendSynchronizationMessage(Channel *channel);
+void sendLocationResponseMessage(Channel *channel);
+void sendLocationRequestMessage(Channel *channel);
+void sendMessage(Channel *channel, uint8_t *data, int n);
+int isControlChar(uint8_t ch);
+Direction rotatedDirection(Direction dir);
 
 
 Direction rotatedDirection(Direction dir) {
@@ -88,6 +100,7 @@ Direction rotatedDirection(Direction dir) {
  *
  * ---------Synchronization-------
  * uint8_t TYPE = SynchronizationType
+ * uint8_t COUNTER
  */
 
 #define DLE_MASK (0x80)
@@ -192,9 +205,10 @@ void sendSynchronizationMessage(Channel *channel) {
   uint8_t buf[100];
   buf[0] = SOH;
   buf[1] = SynchronizationType;
-  buf[2] = ETX;
+  buf[2] = state.counter;
+  buf[3] = ETX;
 
-  sendMessage(channel, buf, 3);
+  sendMessage(channel, buf, 4);
 }
 
 
@@ -352,11 +366,20 @@ void processChannel(Direction dir) {
         channel->step = 0;
         break;
       case 25: // Synchronization message type
+        // Pull the counter
+        channel->counter = data;
+        channel->step++;
+        break;
+      case 26:
         // Receive an ETX
         if(data == ETX) {
-          PRINT("Resetting clock\n");
           rtcReset();
-          state.counter = 0;
+          state.counter = channel->counter;
+          processLight();
+          PRINT("Clock synchronized\n");
+          PRINT("Counter: ");
+          printDec(state.counter);
+          PRINT("\n");
         }
         channel->step = 0;
         break;
@@ -514,26 +537,25 @@ void processLight() {
 
   // bitmaskPrint(state.pattern[frame]);
   if(on) {
-    PRINT("LIGHT ON\n");
+    // PRINT("LIGHT ON\n");
     timerSetDuty(90.0);
     GPIOB->BRR = 0x0080;
   } else {
-    PRINT("LIGHT OFF\n");
+    // PRINT("LIGHT OFF\n");
     timerSetDuty(0.0);
     GPIOB->BSRR = 0x0080;
   }
   // Synchronize once per 5 second
-  PRINT("counter ");
-  printDec(state.counter);
-  PRINT("\n");
+  // PRINT("counter ");
+  // printDec(state.counter);
+  // PRINT("\n");
   if(state.x == 0 && state.y == 0) {
-    if(state.counter % (5*8) == 0) {
+    if(state.counter % (1) == 0) {
       PRINT("Sending synchronization message\n");
       sendSynchronizationMessage(&channel_N);
       sendSynchronizationMessage(&channel_W);
       sendSynchronizationMessage(&channel_S);
       sendSynchronizationMessage(&channel_E);
-
     }
   }
 }

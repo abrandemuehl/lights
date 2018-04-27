@@ -27,7 +27,7 @@ int main() {
   PRINT("Startup\n");
 
   initTimer();
-  initRTC();
+  initRTC(1.0/8.0);
   protocolInit();
 
   PRINT("Main loop\n");
