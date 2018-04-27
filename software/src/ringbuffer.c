@@ -23,8 +23,8 @@ int bufferPut(Buffer *buf, uint8_t *data, int n) {
   int written = 0;
   for(int i=0; i < n; i++) {
     if(buf->start == bufferIndexInc(buf->end)) {
-      PRINT("Put buffer full\n");
-      return written;
+      PRINT("Put buffer full. Overriding\n");
+      buf->start = bufferIndexInc(buf->start);
     }
 
     buf->data[buf->end] = data[i];

@@ -5,6 +5,7 @@
 #include "rtc.h"
 #include "timer.h"
 #include "bitmask.h"
+#include "pattern.h"
 
 #define USART_N (USART3)
 #define USART_W (USART6)
@@ -308,46 +309,21 @@ void protocolInit() {
   channels.S.direction = SOUTH;
   channels.E.direction = EAST;
 
-  channels.N.step = 0;
-  channels.W.step = 0;
-  channels.S.step = 0;
-  channels.E.step = 0;
-
 #if LEADER
-  // Pattern
-  bitmaskWrite(state.pattern[0], 0, 0, 1);
-  bitmaskWrite(state.pattern[1], 0, 0, 0);
-  bitmaskWrite(state.pattern[2], 0, 0, 0);
-
-  bitmaskWrite(state.pattern[0], -1, 0, 0);
-  bitmaskWrite(state.pattern[1], -1, 0, 1);
-  bitmaskWrite(state.pattern[2], -1, 0, 0);
-
-  bitmaskWrite(state.pattern[0], -2, 0, 0);
-  bitmaskWrite(state.pattern[1], -2, 0, 0);
-  bitmaskWrite(state.pattern[2], -2, 0, 1);
-
-  bitmaskWrite(state.pattern[0], 1, 0, 0);
-  bitmaskWrite(state.pattern[1], 1, 0, 1);
-  bitmaskWrite(state.pattern[2], 1, 0, 0);
-
-  bitmaskWrite(state.pattern[0], 2, 0, 0);
-  bitmaskWrite(state.pattern[1], 2, 0, 0);
-  bitmaskWrite(state.pattern[2], 2, 0, 1);
-  bitmaskPrint(state.pattern[0]);
-  bitmaskPrint(state.pattern[1]);
-  bitmaskPrint(state.pattern[2]);
+  PRINT("Starting up as LEADER\n");
+  makeDefaultPattern(state.pattern);
   state.initialized = 1;
 #else // LEADER
-  sendLocationRequestMessage(&channels.N);
-  sendLocationRequestMessage(&channels.E);
-  sendLocationRequestMessage(&channels.S);
-  sendLocationRequestMessage(&channels.W);
-
+  PRINT("Starting up as FOLLOWER\n");
 
   for(int i=0; i < 5; i++) {
-    protocolProcessMessages();
+    sendLocationRequestMessage(&channels.N);
+    sendLocationRequestMessage(&channels.E);
+    sendLocationRequestMessage(&channels.S);
+    sendLocationRequestMessage(&channels.W);
+
     for (int i = 0; i < 100000; i++);
+    protocolProcessMessages();
     if(state.initialized) {
       break;
     }
@@ -631,12 +607,10 @@ void processChannel(Direction dir) {
 
       channel->complete_pattern = 0;
 
-#if LEADER
       // Reset all neighbors outwards
       uint8_t resetMsg[100];
       int len = buildResetMessage(resetMsg);
       sendMessageOutward(resetMsg, len);
-#endif
     }
   }
 }
@@ -654,13 +628,13 @@ void processLight() {
   int frame = state.counter % FRAME_COUNT;
   uint8_t on = bitmaskGet(state.pattern[frame], state.x, state.y);
 
-  bitmaskPrint(state.pattern[frame]);
+  // bitmaskPrint(state.pattern[frame]);
   if(on) {
-    PRINT("LIGHT ON\n");
+    // PRINT("LIGHT ON\n");
     timerSetDuty(90.0);
     GPIOB->BRR = 0x0080;
   } else {
-    PRINT("LIGHT OFF\n");
+    // PRINT("LIGHT OFF\n");
     timerSetDuty(0.0);
     GPIOB->BSRR = 0x0080;
   }
@@ -691,6 +665,12 @@ void protocolStep() {
   }
   protocolProcessMessages();
   if(rtcGetAndClear()) {
+#if !LEADER
+    if(state.x == 0 && state.y == 0) {
+      PRINT("Not LEADER but location is (0,0)\n");
+      return;
+    }
+#endif // !LEADER
     processLight();
     state.counter++;
   }
