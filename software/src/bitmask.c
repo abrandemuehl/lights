@@ -27,3 +27,13 @@ int bitmaskSerialize(Bitmask mask, uint8_t *buf) {
   memcpy(buf, mask, sizeof(Bitmask));
   return sizeof(Bitmask);
 }
+
+
+void bitmaskPrint(Bitmask mask) {
+  for(int i=0; i < PATTERN_DIAMETER; i++) {
+    for(int j = 0; j < (PATTERN_DIAMETER /8); j++) {
+      printByteBin(mask[i][j]);
+      PRINT("\n");
+    }
+  }
+}

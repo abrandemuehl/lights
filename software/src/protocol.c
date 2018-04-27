@@ -28,7 +28,6 @@ typedef struct {
   uint8_t initialized;
   Bitmask pattern[FRAME_COUNT];
   uint8_t rotation;
-  uint8_t frame;
   uint32_t counter;
 } State;
 
@@ -50,6 +49,7 @@ typedef struct {
   int8_t location_y;
   // Received orientation from neighbors
   uint8_t orientation;
+  uint32_t counter;
   Bitmask pattern[FRAME_COUNT];
   int pattern_idx;
   uint8_t complete_pattern;
@@ -83,7 +83,8 @@ Direction rotatedDirection(Direction dir) {
  * int8_t X
  * int8_t Y
  * int8_t Orientation
- * uint8_t Pattern[FRAME_COUNT][PATTERN_DIAMETER][PATTERN_DIAMETER]
+ * uint32_t frame
+ * Bitmask Pattern[FRAME_COUNT]
  *
  * ---------Synchronization-------
  * uint8_t TYPE = SynchronizationType
@@ -244,11 +245,18 @@ void protocolInit() {
     state.initialized = 1;
   }
 
-  bitmaskWrite(state.pattern[0], 0, 0, 1);
-  bitmaskWrite(state.pattern[1], 0, 0, 0);
-  bitmaskWrite(state.pattern[2], 0, 0, 0);
-  bitmaskWrite(state.pattern[3], 0, 0, 0);
-  bitmaskWrite(state.pattern[4], 0, 0, 0);
+  bitmaskWrite(state.pattern[0], 0, 0, 0);
+  bitmaskWrite(state.pattern[1], 0, 0, 1);
+  bitmaskWrite(state.pattern[2], 0, 0, 1);
+  bitmaskWrite(state.pattern[3], 0, 0, 1);
+  bitmaskWrite(state.pattern[4], 0, 0, 1);
+
+  bitmaskWrite(state.pattern[0], 0, -1, 0);
+  bitmaskWrite(state.pattern[1], 0, -1, 1);
+  bitmaskWrite(state.pattern[2], 0, -1, 1);
+  bitmaskWrite(state.pattern[3], 0, -1, 1);
+  bitmaskWrite(state.pattern[4], 0, -1, 1);
+
 }
 
 void processChannel(Direction dir) {
@@ -348,6 +356,7 @@ void processChannel(Direction dir) {
         if(data == ETX) {
           PRINT("Resetting clock\n");
           rtcReset();
+          state.counter = 0;
         }
         channel->step = 0;
         break;
@@ -366,26 +375,21 @@ void processChannel(Direction dir) {
         channel->step++;
         break;
       case 53:
-
+        channel->counter = data;
+        channel->step++;
+      case 54:
         ((uint8_t *)channel->pattern)[channel->pattern_idx] = data;
         // y = (channel->pattern_idx % (FRAME_COUNT*PATTERN_DIAMETER)) / PATTERN_DIAMETER;
         // x = channel->pattern_idx % PATTERN_DIAMETER;
         // frame = channel->pattern_idx / (FRAME_COUNT*PATTERN_DIAMETER);
         // channel->pattern[frame][y][x] = data;
         channel->pattern_idx++;
-        PRINT("sizeof(channel->pattern): ");
-        printDec(sizeof(channel->pattern));
-        PRINT("\n");
-
-        PRINT("channel->pattern_idx: ");
-        printDec(channel->pattern_idx);
-        PRINT("\n");
         if(channel->pattern_idx >= sizeof(channel->pattern)) {
           channel->pattern_idx = 0;
           channel->step++;
         }
         break;
-      case 54:
+      case 55:
         if(data == ETX) {
           PRINT("Got ETX\n");
           channel->complete_pattern = 1;
@@ -405,6 +409,7 @@ void processChannel(Direction dir) {
       // Copy data into location
       state.x = channel->location_x;
       state.y = channel->location_y;
+      state.counter = channel->counter;
 
       memcpy(state.pattern, channel->pattern, sizeof(channel->pattern));
 
@@ -480,6 +485,13 @@ void processChannel(Direction dir) {
       printDec(state.rotation);
       PRINT("\n");
 
+      for(int i=0; i < FRAME_COUNT; i++) {
+        // PRINT("Frame ");
+        // printDec(i);
+        // PRINT("\n");
+        // bitmaskPrint(state.pattern[i]);
+      }
+
       state.initialized = 1;
 
       channel->complete_pattern = 0;
@@ -497,28 +509,38 @@ void protocolProcessMessages() {
 }
 
 void processLight() {
-  uint8_t on = bitmaskGet(state.pattern[state.frame], state.x, state.y);
+  int frame = state.counter % FRAME_COUNT;
+  uint8_t on = bitmaskGet(state.pattern[frame], state.x, state.y);
+
+  // bitmaskPrint(state.pattern[frame]);
   if(on) {
+    PRINT("LIGHT ON\n");
     timerSetDuty(90.0);
-    GPIOB->BSRR = 0x0080;
-  } else {
-    timerSetDuty(0.0);
     GPIOB->BRR = 0x0080;
+  } else {
+    PRINT("LIGHT OFF\n");
+    timerSetDuty(0.0);
+    GPIOB->BSRR = 0x0080;
   }
-  // Synchronize once per second
-  if(state.counter % 8 == 0) {
-    // PRINT("Sending synchronization message\n");
-    // sendSynchronizationMessage(&channel_N);
-    // sendSynchronizationMessage(&channel_W);
-    // sendSynchronizationMessage(&channel_S);
-    // sendSynchronizationMessage(&channel_E);
+  // Synchronize once per 5 second
+  PRINT("counter ");
+  printDec(state.counter);
+  PRINT("\n");
+  if(state.x == 0 && state.y == 0) {
+    if(state.counter % (5*8) == 0) {
+      PRINT("Sending synchronization message\n");
+      sendSynchronizationMessage(&channel_N);
+      sendSynchronizationMessage(&channel_W);
+      sendSynchronizationMessage(&channel_S);
+      sendSynchronizationMessage(&channel_E);
+
+    }
   }
 }
 
 void protocolStep() {
   protocolProcessMessages();
   if(rtcGetAndClear()) {
-    state.frame = (state.frame + 1) % FRAME_COUNT;
     processLight();
     state.counter++;
   }

@@ -9,7 +9,7 @@ AS=arm-none-eabi-as
 OBJCOPY=arm-none-eabi-objcopy
 
 
-LIBS=lib/stdperiph/system_stm32f0xx.o lib/stdperiph/stm32f0xx_rcc.o lib/stdperiph/stm32f0xx_gpio.o lib/stdperiph/stm32f0xx_usart.o lib/stdperiph/stm32f0xx_tim.o lib/stdperiph/stm32f0xx_misc.o
+LIBS=lib/stdperiph/system_stm32f0xx.o lib/stdperiph/stm32f0xx_rcc.o lib/stdperiph/stm32f0xx_gpio.o lib/stdperiph/stm32f0xx_usart.o lib/stdperiph/stm32f0xx_tim.o lib/stdperiph/stm32f0xx_misc.o lib/stdperiph/stm32f0xx_rtc.o lib/stdperiph/stm32f0xx_exti.o lib/stdperiph/stm32f0xx_pwr.o
 # LIBS=lib/cmsis/system_stm32f0xx.o lib/hal/stm32f0xx_hal_usart.o
 OBJS=$(patsubst %.cc,%.o,$(wildcard src/*.cc)) $(patsubst %.c,%.o,$(wildcard src/*.c)) src/startup_stm32f0xx.o
 OBJS += $(LIBS)
